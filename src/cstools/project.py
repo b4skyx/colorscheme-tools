@@ -32,9 +32,10 @@ class ProjectConfig:
     schemes: list[str] = field(default_factory=list)
     targets: list[str] = field(default_factory=list)
 
-    def context(self) -> RenderContext:
-        """Render context for this project."""
-        return RenderContext(project_name=self.name, lua_module=self.lua_module, url=self.url)
+    def context(self, warn: Warn | None = None) -> RenderContext:
+        """Render context for this project, sharing the build's warning channel."""
+        return RenderContext(project_name=self.name, lua_module=self.lua_module, url=self.url,
+                             warn=_stderr_warn if warn is None else warn)
 
 
 def _stderr_warn(message: str) -> None:
@@ -95,7 +96,7 @@ def render_repo(repo: str | Path, targets: Sequence[str] | None = None, schemes:
     for sid, scheme in zip(ids, loaded):
         if scheme.id != sid:
             raise ProjectError(f"{sid}/{SCHEME_FILE} declares id {scheme.id!r}")
-    ctx = config.context()
+    ctx = config.context(warn)
     files: dict[str, str] = {}
     owner: dict[str, str] = {}
     for name in names:

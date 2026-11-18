@@ -1,8 +1,9 @@
 """Deterministic base-colour names from OKLCH hue buckets.
 
 Colours with chroma below ``GREY_CHROMA`` are ``grey``. When several colours share a bucket they
-are sorted by OKLCH lightness: two become ``<b>_dark``/``<b>_light``, three ``<b>_dark``/``<b>``/
-``<b>_light``, more ``<b>_1`` … ``<b>_n``.
+are sorted by OKLCH lightness and get suffixes from a lightness ladder (``LADDERS``), e.g. four
+blues become ``blue_deep``, ``blue_dark``, ``blue_light``, ``blue_pale``. Buckets with more members
+than the longest ladder fall back to ``<b>_1`` … ``<b>_n``.
 """
 from __future__ import annotations
 
@@ -18,6 +19,18 @@ HUE_BUCKETS: tuple[tuple[str, float, float], ...] = (
     ("blue", 235, 260), ("indigo", 260, 280), ("violet", 280, 300), ("purple", 300, 320),
     ("magenta", 320, 340), ("pink", 340, 350),
 )
+
+
+#: Suffixes by bucket size, darkest first ("" = the plain bucket name).
+LADDERS: dict[int, tuple[str, ...]] = {
+    1: ("",),
+    2: ("_dark", "_light"),
+    3: ("_dark", "", "_light"),
+    4: ("_deep", "_dark", "_light", "_pale"),
+    5: ("_deep", "_dark", "", "_light", "_pale"),
+    6: ("_deep", "_dark", "_dim", "_soft", "_light", "_pale"),
+    7: ("_deep", "_dark", "_dim", "", "_soft", "_light", "_pale"),
+}
 
 
 def hue_bucket(hexv: str) -> str:
@@ -39,13 +52,6 @@ def name_colors(hexes: Iterable[str]) -> dict[str, str]:
     names: dict[str, str] = {}
     for bucket, members in buckets.items():
         members.sort(key=lambda h: (hex_to_oklch(h)[0], h))
-        if len(members) == 1:
-            suffixes = [""]
-        elif len(members) == 2:
-            suffixes = ["_dark", "_light"]
-        elif len(members) == 3:
-            suffixes = ["_dark", "", "_light"]
-        else:
-            suffixes = [f"_{i}" for i in range(1, len(members) + 1)]
+        suffixes = LADDERS.get(len(members)) or tuple(f"_{i}" for i in range(1, len(members) + 1))
         names.update({h: bucket + s for h, s in zip(members, suffixes)})
     return names

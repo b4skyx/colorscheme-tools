@@ -20,8 +20,8 @@ class NamingTest(unittest.TestCase):
         names = name_colors(["#ff0000", "#800000", "#c00000"])
         self.assertEqual(names["#c00000"], "red")
         names = name_colors(["#ff0000", "#800000", "#c00000", "#400000"])
-        self.assertEqual(sorted(names.values()), ["red_1", "red_2", "red_3", "red_4"])
-        self.assertEqual(names["#400000"], "red_1")
+        self.assertEqual(sorted(names.values()), ["red_dark", "red_deep", "red_light", "red_pale"])
+        self.assertEqual(names["#400000"], "red_deep")
 
     def test_deterministic_and_order_independent(self) -> None:
         hexes = ["#7b81b9", "#9ECFFF", "#e2c88a", "#739b69", "#bb8cab", "#6686b9", "#6f99c9"]

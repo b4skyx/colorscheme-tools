@@ -16,6 +16,7 @@ from .scheme import io
 from .scheme.expr import SchemeError
 from .scheme.migrate import migrate_v1, read_recipe_metadata
 from .scheme.model import Scheme
+from .scheme.rename import auto_names, rename_palette
 from .scheme.validate import validate
 from .score.editor import score_editor
 from .score.terminal import score_terminal
@@ -167,6 +168,24 @@ def cmd_inspect(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_rename_palette(args: argparse.Namespace) -> int:
+    """Rename palette colours to the current naming rules, rewriting every reference in place."""
+    status = 0
+    for path in args.paths:
+        scheme = io.load(path)
+        mapping = {old: new for old, new in auto_names(scheme).items() if old != new}
+        if not mapping:
+            print(f"{path}: names up to date")
+            continue
+        for old, new in sorted(mapping.items()):
+            print(f"{path}: {old} -> {new}")
+        if args.check:
+            status = 1
+            continue
+        io.dump(rename_palette(scheme, mapping), path)
+    return status
+
+
 def cmd_targets(args: argparse.Namespace) -> int:
     for name in sorted(REGISTRY):
         t = REGISTRY[name]
@@ -225,6 +244,11 @@ def make_parser() -> argparse.ArgumentParser:
     s.add_argument("scheme", metavar="SCHEME.json")
     s.add_argument("--json", action="store_true")
     s.set_defaults(func=cmd_inspect)
+
+    s = sub.add_parser("rename-palette", help="rename palette colours to the naming rules (rewrites references)")
+    s.add_argument("paths", nargs="+", help="colorschemes.json files, rewritten in place")
+    s.add_argument("--check", action="store_true", help="only report; exit 1 if any name would change")
+    s.set_defaults(func=cmd_rename_palette)
 
     s = sub.add_parser("targets", help="list registered targets")
     s.set_defaults(func=cmd_targets)

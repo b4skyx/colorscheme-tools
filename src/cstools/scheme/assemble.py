@@ -8,7 +8,7 @@ as that reference or expression instead of a new hex.
 """
 from __future__ import annotations
 
-from typing import Any, Mapping
+from typing import Any, Mapping, Sequence
 
 from .defaults import DEFAULT_DERIVED
 from .expr import ColorValue
@@ -44,13 +44,14 @@ def _syntax_roles(n: Mapping[str, str], styles: Mapping[str, Any]) -> dict[str, 
 
 def assemble_scheme(meta: Mapping[str, Any], base: Mapping[str, str], accents: Mapping[str, str],
                     styles: Mapping[str, Any], term_normal: Mapping[str, str],
-                    term_bright: Mapping[str, str]) -> Scheme:
+                    term_bright: Mapping[str, str], *, terminal_formulas: Sequence[ColorValue] = ()) -> Scheme:
     """Build a scheme from hex colours.
 
     ``meta``: id, name, variant and optionally family, description, tags, designed_for, derived.
     ``base``: hex for each of bg, bg_alt, fg, fg_dim, comment. ``accents``: hex for each ``ACCENT_KEYS``.
     ``styles``: comment_italic / keyword_italic / parameter_italic booleans.
     ``term_normal`` / ``term_bright``: hex for each ANSI name (black … white).
+    ``terminal_formulas``: extra expressions for terminal colours, tried before ``TERMINAL_FORMULAS``.
     """
     missing = [k for k in UI_ROLES if k not in base] + [k for k in ACCENT_KEYS if k not in accents]
     missing += [f"normal.{k}" for k in ANSI_NAMES if k not in term_normal]
@@ -91,6 +92,7 @@ def assemble_scheme(meta: Mapping[str, Any], base: Mapping[str, str], accents: M
     draft = build({h: f"accent_{i}" for i, h in enumerate(accent_hexes)})
     candidates: list[ColorValue] = [name for name in DEFAULT_DERIVED if name not in draft.palette]
     candidates += [name for name in draft.derived if name not in candidates]
+    candidates += list(terminal_formulas)
     candidates += [{"raise": [ui[role], dL]} for role, dL in TERMINAL_FORMULAS]
     expr_by_hex: dict[str, ColorValue] = {}
     for c in candidates:

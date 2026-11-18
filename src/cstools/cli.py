@@ -5,14 +5,17 @@ import argparse
 import json
 import sys
 from pathlib import Path
-from typing import Any, Sequence
+from typing import Any, Sequence, TextIO
 
 from . import __version__
 from .color.spaces import oklch_string
+from .optimize.build import optimize_recipe
+from .optimize.recipe import load_recipe
 from .project import CONFIG_NAME, ProjectError, build, load_config, load_scheme
 from .scheme import io
 from .scheme.expr import SchemeError
 from .scheme.migrate import migrate_v1, read_recipe_metadata
+from .scheme.model import Scheme
 from .scheme.validate import validate
 from .score.editor import score_editor
 from .score.terminal import score_terminal
@@ -102,22 +105,48 @@ def cmd_render(args: argparse.Namespace) -> int:
     return 0
 
 
-def cmd_score(args: argparse.Namespace) -> int:
-    scheme = load_scheme(args.scheme)
-    model = VisionModel.from_dict(_read_json(args.model)) if args.model else DEFAULT
-    result = {"model": {"type": model.type, "severity": model.severity},
-              "editor": score_editor(scheme, model), "terminal": score_terminal(scheme, model)}
-    if args.json:
-        print(json.dumps(result, indent=2, ensure_ascii=False))
-        return 0
+def _scores(scheme: Scheme, model: VisionModel) -> dict[str, Any]:
+    return {"model": {"type": model.type, "severity": model.severity},
+            "editor": score_editor(scheme, model), "terminal": score_terminal(scheme, model)}
+
+
+def _print_score_summary(scheme: Scheme, model: VisionModel, result: dict[str, Any], file: TextIO | None = None) -> None:
+    out = file or sys.stdout
     e, t = result["editor"], result["terminal"]
-    print(f"{scheme.name} ({model.type}, severity {model.severity})")
+    print(f"{scheme.name} ({model.type}, severity {model.severity})", file=out)
     worst = "≈".join(e["core_worst"]) if e["core_worst"] else "-"
     print(f"  editor:   kept {e['syntax_kept'] * 100:.0f}% ({e['syntax_lost']}/{e['syntax_pairs']} lost)  "
           f"core min {e['core_min']} ({worst})  err/warn {e['errwarn']}  add/del {e['add_del']}  "
-          f"git min {e['git_min']}  fg/bg {e['fgbg']}")
+          f"git min {e['git_min']}  fg/bg {e['fgbg']}", file=out)
     print(f"  terminal: normal min {t['minN']} ({t['worst']})  key {t['key']}  bright min {t['minB']}  "
-          f"vs fg {t['fgSep']}  min contrast {t['read']}  fg/bg {t['fgbg']}")
+          f"vs fg {t['fgSep']}  min contrast {t['read']}  fg/bg {t['fgbg']}", file=out)
+
+
+def cmd_score(args: argparse.Namespace) -> int:
+    scheme = load_scheme(args.scheme)
+    model = VisionModel.from_dict(_read_json(args.model)) if args.model else DEFAULT
+    result = _scores(scheme, model)
+    if args.json:
+        print(json.dumps(result, indent=2, ensure_ascii=False))
+        return 0
+    _print_score_summary(scheme, model, result)
+    return 0
+
+
+def cmd_optimize(args: argparse.Namespace) -> int:
+    recipe = load_recipe(args.recipe).with_budget(args.iterations, args.seed)
+    scheme = optimize_recipe(recipe, DEFAULT)
+    errors = validate(io.to_dict(scheme))
+    if errors:
+        print("optimised scheme is invalid:\n  " + "\n  ".join(errors), file=sys.stderr)
+        return 1
+    if args.output:
+        io.dump(scheme, args.output)
+        print(f"wrote {args.output}")
+        _print_score_summary(scheme, DEFAULT, _scores(scheme, DEFAULT))
+    else:
+        sys.stdout.write(io.dumps(scheme))
+        _print_score_summary(scheme, DEFAULT, _scores(scheme, DEFAULT), file=sys.stderr)
     return 0
 
 
@@ -166,10 +195,12 @@ def make_parser() -> argparse.ArgumentParser:
     s.add_argument("--recipe", metavar="RECIPE.toml", help="take name, family, description and tags from a recipe")
     s.set_defaults(func=cmd_migrate)
 
-    s = sub.add_parser("optimize", help="optimise a recipe into a scheme (not implemented yet)")
+    s = sub.add_parser("optimize", help="optimise a recipe's editor roles and terminal into a v2 scheme")
     s.add_argument("recipe", metavar="RECIPE.toml")
-    s.add_argument("-o", "--output", metavar="OUT.json")
-    s.set_defaults(func=cmd_not_implemented)
+    s.add_argument("-o", "--output", metavar="OUT.json", help="output file (default: stdout; scores go to stderr)")
+    s.add_argument("--iterations", type=int, metavar="N", help="override editor and terminal iterations")
+    s.add_argument("--seed", type=int, metavar="N", help="override editor and terminal seeds")
+    s.set_defaults(func=cmd_optimize)
 
     s = sub.add_parser("build", help="render every configured target of a theme repository")
     s.add_argument("repo", metavar="REPO")

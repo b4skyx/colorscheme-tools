@@ -29,7 +29,7 @@ class Vim(Target):
         out = {}
         for scheme in schemes:
             lines = [ctx.header('"', scheme).rstrip(),
-                     '" Neovim tries colors/<id>.vim before colors/<id>.lua.',
+                     f'" Neovim tries colors/{scheme.id}.vim before colors/{scheme.id}.lua.',
                      f"if has('nvim') && !exists({_vim_string('g:' + module + '_vimscript')})",
                      f"  lua require({lua_value(module)}).load({lua_value(scheme.id)})",
                      "  finish", "endif", "hi clear", "if exists('syntax_on')", "  syntax reset", "endif",

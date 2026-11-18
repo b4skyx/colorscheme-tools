@@ -4,7 +4,7 @@ from __future__ import annotations
 from ..scheme.model import ANSI_NAMES, Scheme
 from .base import RenderContext, Target, register
 
-USAGE = 'copy to ~/.config/rio/themes/<id>.toml and set theme = "<id>" in ~/.config/rio/settings.toml'
+USAGE = 'copy to ~/.config/rio/themes/<id>.toml and set theme = "<id>" in ~/.config/rio/config.toml'
 
 
 @register

@@ -4,7 +4,7 @@ from __future__ import annotations
 from ..scheme.model import Scheme
 from .base import RenderContext, Target, register
 
-USAGE = "copy to ~/.config/fish/themes/<Name>.theme and select it via fish_config theme"
+USAGE = "copy to ~/.config/fish/themes/<Name>.theme, then run: fish_config theme save <Name>"
 
 #: fish_color_* name → (fg role, extra flags); ``valid_path`` is always underlined
 SYNTAX_COLORS: tuple[tuple[str, str, tuple[str, ...]], ...] = (

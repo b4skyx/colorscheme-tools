@@ -64,3 +64,24 @@ class GoldenTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class HeaderPlaceholderTest(unittest.TestCase):
+    """Usage lines name the actual scheme instead of <Name>/<id> placeholders."""
+
+    def test_no_placeholders_in_generated_headers(self):
+        from cstools.targets import REGISTRY, RenderContext
+        from cstools.scheme import io as scheme_io
+        from pathlib import Path
+        path = Path.home() / "colorblind-lab" / "colorschemes" / "haze" / "colorschemes.json"
+        if not path.exists():
+            self.skipTest("theme repo not present")
+        scheme = scheme_io.load(path)
+        ctx = RenderContext(project_name="clearsight", lua_module="clearsight")
+        for name, target in REGISTRY.items():
+            files = target.render(scheme, ctx) if target.scope == "scheme" else target.render_project([scheme], ctx)
+            for rel, text in files.items():
+                head = "\n".join(text.splitlines()[:6])
+                with self.subTest(target=name, file=rel):
+                    self.assertNotIn("<Name>", head)
+                    self.assertNotIn("<id>", head)

@@ -16,6 +16,15 @@
   select, input, textarea { background: #24262a; color: var(--txt); border: 1px solid var(--line); border-radius: 6px; padding: 4px 6px; font: inherit; }
   button.b { background: #2b2e33; color: var(--txt); border: 1px solid #3a3e45; border-radius: 7px; padding: 5px 11px; cursor: pointer; }
   main { display: grid; grid-template-columns: 290px 1fr; min-height: calc(100% - 52px); }
+  /* mode=preview: one scheme, no gallery chrome (used for README screenshots) */
+  body.preview header, body.preview aside { display: none; }
+  body.preview main { display: block; min-height: 100%; }
+  body.preview #view { padding: 0; }
+  .pv { padding: 18px 22px 22px; min-height: 100vh; }
+  .pv .pvhead { display: flex; align-items: baseline; gap: 12px; margin: 0 0 12px; }
+  .pv .pvhead b { font-size: 20px; } .pv .pvhead span { opacity: .75; font-size: 13px; }
+  .pv .pvgrid { display: grid; grid-template-columns: 1.35fr 1fr; gap: 16px; align-items: start; }
+  .pv .pvgrid > div > * + * { margin-top: 16px; }
   aside { border-right: 1px solid var(--line); overflow-y: auto; max-height: calc(100vh - 52px); position: sticky; top: 52px; }
   .grp { padding: 10px 14px 4px; color: var(--mut); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; }
   .item { padding: 7px 14px; cursor: pointer; display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; border-left: 3px solid transparent; }
@@ -584,6 +593,16 @@ function render() {
   const V = document.getElementById("view");
   const simStyle = state.sim ? "filter:url(#sim)" : "";
   if (!filtered().length) { V.innerHTML = `<p class="help">No schemes match this filter.</p>`; return; }
+  if (state.mode === "preview") {               // single-scheme screenshot view
+    const P = DATA.schemes.find(s => s.id === state.sel) || filtered()[0];
+    const B = base(P), frame = (hl(P, "StatusLine").bg) || B.bg;
+    document.body.classList.add("preview");
+    document.body.style.background = frame;
+    V.innerHTML = `<div class="pv" style="background:${frame};color:${B.fg}${state.sim ? ";filter:url(#sim)" : ""}">`
+      + `<div class="pvhead"><b>${esc(P.name)}</b><span>${esc(P.description || "")}</span></div>`
+      + `<div class="pvgrid"><div>${renderEditor(P, state.lang)}</div><div>${renderTerm(P)}${renderDiff(P)}</div></div></div>`;
+    return;
+  }
   if (state.mode === "grid") {
     V.innerHTML = `<p class="help">Overview of the <b>${filtered().length}</b> schemes in this filter. Click a card to open the full editor view (diagnostics, git signs, completion menu, diff and terminal). Rate with ★ or mark picks with ♥.
       Scores measure colour separation under the ${esc(DATA.model.type)} model (severity ${DATA.model.severity}): blue = good, yellow = fair, orange = weak.</p>`
@@ -654,7 +673,7 @@ document.getElementById("save").onclick = async () => {
 
 // ---------------- initial data / URL state / SVG simulation ----------------
 const qs = new URLSearchParams(location.search);
-for (const [key, allowed] of Object.entries({ mode: ["grid", "detail"],
+for (const [key, allowed] of Object.entries({ mode: ["grid", "detail", "preview"],
   filter: ["scheme", "comparison", "picked", "light", "all"], lang: Object.keys(SAMPLES) })) {
   if (allowed.includes(qs.get(key))) state[key] = qs.get(key);
 }

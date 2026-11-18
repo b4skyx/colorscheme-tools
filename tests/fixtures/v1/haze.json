@@ -8,11 +8,10 @@
     "muted",
     "low-contrast",
     "warm-grey",
-    "favourite",
     "deutan-optimised",
     "treesitter"
   ],
-  "description": "Between Nord and Fog: soft, slightly warm grey with dusty accents. Lowest contrast of the set.",
+  "description": "Soft, slightly warm grey with dusty accents. The lowest-contrast scheme of the set.",
   "designed_for": {
     "vision": "strong deutan (deuteranopia / extreme deuteranomaly)",
     "simulation": "Machado 2009 deutan, severity 1.0",

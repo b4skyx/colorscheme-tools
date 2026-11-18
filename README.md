@@ -3,12 +3,15 @@
 Create, convert and render colourschemes from a single **`colorschemes.json`** per scheme.
 Pure Python ≥ 3.11, standard library only. The package is `cstools`, with a CLI of the same name.
 
+Used by the theme repository [b4skyx/colorschemes](https://github.com/b4skyx/colorschemes) (the clearsight schemes).
 It is designed around accessibility: schemes are optimised and scored against a colour-vision model
 (default: strong deutan, Machado 2009, CIEDE2000 on simulated colours).
 
 ## Install
 ```sh
-pip install -e .            # provides the `cstools` command
+pip install git+https://github.com/b4skyx/colorscheme-tools   # provides the `cstools` command
+# or from a clone:
+pip install -e .
 # or, without installing:
 PYTHONPATH=src python3 -m cstools --help
 ```
@@ -24,7 +27,7 @@ PYTHONPATH=src python3 -m cstools --help
 | `cstools inspect SCHEME.json` | which roles, derived colours and terminal slots use each base colour |
 | `cstools rename-palette PATH… [--check]` | rename base colours to the naming rules, rewriting every reference |
 | `cstools migrate OLD.json -o NEW.json [--recipe …]` | convert a schema v1 file to v2 |
-| `cstools gallery REPO -o DIR [--extra-dumps DIR]` | offline HTML gallery with editor/diff/terminal previews and deutan simulation |
+| `cstools gallery REPO -o DIR [--extra-dumps DIR] [--screenshots DIR]` | offline HTML gallery with editor/diff/terminal previews and deutan simulation; optional PNG previews per scheme (Firefox) |
 | `cstools targets` | list output formats |
 
 ## Targets

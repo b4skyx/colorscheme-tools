@@ -7,11 +7,10 @@
     "dark",
     "soft",
     "violet",
-    "rose-pine-like",
     "deutan-optimised",
     "treesitter"
   ],
-  "description": "Ros\u00e9-Pine-like dusky violet. Rose, gold, foam and iris, with red and green replaced by gold and pine-blue.",
+  "description": "Dusky violet with soft rose, gold, teal and lavender accents.",
   "designed_for": {
     "vision": "strong deutan (deuteranopia / extreme deuteranomaly)",
     "simulation": "Machado 2009 deutan, severity 1.0",

@@ -203,6 +203,12 @@ def cmd_gallery(args: argparse.Namespace) -> int:
     model = VisionModel.from_dict(_read_json(args.model)) if args.model else DEFAULT
     for path in build_gallery(args.repo, args.output, args.extra_dumps, model):
         print(f"wrote {path}")
+    if args.screenshots:
+        from .gallery import capture_previews
+
+        ids = load_config(args.repo).schemes
+        for path in capture_previews(args.output, ids, args.screenshots, lang=args.lang):
+            print(f"wrote {path}")
     return 0
 
 
@@ -266,6 +272,8 @@ def make_parser() -> argparse.ArgumentParser:
     s.add_argument("-o", "--output", metavar="DIR", help="required output directory")
     s.add_argument("--extra-dumps", metavar="DIR", help="optional Neovim comparison dumps")
     s.add_argument("--model", metavar="MODEL.json", help="vision model (default: deutan, severity 1)")
+    s.add_argument("--screenshots", metavar="DIR", help="also write DIR/<id>.png previews (needs Firefox)")
+    s.add_argument("--lang", default="lua", choices=["lua", "python", "ts", "rust"], help="sample language for screenshots")
     s.set_defaults(func=cmd_gallery)
     return p
 

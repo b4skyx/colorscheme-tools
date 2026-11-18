@@ -5,7 +5,7 @@ disagree, fix one of them in the same change.
 
 `colorscheme-tools` creates, converts and renders colourschemes whose **single source of truth** is one
 `colorschemes.json` per scheme. It is a pure-Python (≥ 3.11, **stdlib only**) package `cstools` with a CLI.
-The first consumer is the theme repository **clearsight** (`~/colorblind-lab/colorschemes`), but nothing
+The first consumer is the theme repository **clearsight** ([b4skyx/colorschemes](https://github.com/b4skyx/colorschemes)), but nothing
 in this package may hard-code clearsight names, paths or colours.
 
 ```

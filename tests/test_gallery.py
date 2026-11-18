@@ -309,3 +309,16 @@ check("valid").then(() => check("denied")).then(() => check("malformed")).catch(
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class PreviewModeTest(unittest.TestCase):
+    """mode=preview renders one scheme without gallery chrome (README screenshots)."""
+
+    def test_preview_mode_and_url(self) -> None:
+        from cstools.gallery import preview_url
+        from importlib.resources import files
+        html = files("cstools.gallery").joinpath("assets/gallery.html").read_text(encoding="utf-8")
+        self.assertIn('mode: ["grid", "detail", "preview"]', html)
+        self.assertIn('state.mode === "preview"', html)
+        url = preview_url("/tmp/g", "haze", "rust")
+        self.assertTrue(url.startswith("file:///") and url.endswith("index.html?mode=preview&sel=haze&lang=rust"))

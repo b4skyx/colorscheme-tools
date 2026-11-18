@@ -61,7 +61,9 @@ class MigrationRegressionTest(unittest.TestCase):
             self.assertEqual(scheme.designed_for["severity"], 1.0)
 
     def test_without_recipe_drops_personal_tags(self) -> None:
-        scheme = migrate_v1(v1("haze"))
+        data = v1("haze")
+        data["tags"] = list(data["tags"]) + ["favourite"]   # personal label injected at test time
+        scheme = migrate_v1(data)
         self.assertNotIn("favourite", scheme.tags)
         self.assertEqual(scheme.family, "haze")
 

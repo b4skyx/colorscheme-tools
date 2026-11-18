@@ -1,0 +1,144 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://colorscheme-tools.invalid/schema/colorscheme.schema.json",
+  "title": "colorschemes.json (schema_version 2)",
+  "description": "Single source of truth for one colourscheme. Hex literals appear only in palette; everything else is a reference or an expression. Reference resolvability, cycles and palette uniqueness are checked by `cstools validate`.",
+  "type": "object",
+  "required": ["schema_version", "id", "name", "variant", "palette", "roles", "terminal"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "schema_version": { "const": 2 },
+    "id": { "type": "string", "minLength": 1 },
+    "name": { "type": "string", "minLength": 1 },
+    "variant": { "enum": ["dark", "light"] },
+    "family": { "type": "string" },
+    "description": { "type": "string" },
+    "tags": { "type": "array", "items": { "type": "string" } },
+    "designed_for": {
+      "type": "object",
+      "properties": {
+        "vision": { "enum": ["deutan", "protan", "tritan", "normal"] },
+        "severity": { "type": "number", "minimum": 0, "maximum": 1 },
+        "metric": { "type": "string" }
+      }
+    },
+    "palette": {
+      "type": "object",
+      "propertyNames": { "$ref": "#/$defs/name" },
+      "additionalProperties": { "$ref": "#/$defs/hex" }
+    },
+    "derived": {
+      "type": "object",
+      "propertyNames": { "$ref": "#/$defs/name" },
+      "additionalProperties": { "$ref": "#/$defs/colorRef" }
+    },
+    "roles": {
+      "type": "object",
+      "required": ["ui", "syntax", "diagnostic", "git"],
+      "additionalProperties": false,
+      "properties": {
+        "ui": { "$ref": "#/$defs/colorBlock", "required": ["bg", "bg_alt", "fg", "fg_dim", "comment"],
+                "propertyNames": { "enum": ["bg", "bg_alt", "fg", "fg_dim", "comment"] } },
+        "syntax": {
+          "type": "object",
+          "required": ["variable", "comment", "keyword", "function", "string", "type", "constant", "number", "boolean",
+                       "property", "parameter", "builtin", "operator", "punctuation", "module", "attribute", "tag",
+                       "escape", "regex", "macro", "constructor", "label", "todo", "note"],
+          "propertyNames": { "enum": ["variable", "comment", "keyword", "function", "string", "type", "constant",
+                                      "number", "boolean", "property", "parameter", "builtin", "operator",
+                                      "punctuation", "module", "attribute", "tag", "escape", "regex", "macro",
+                                      "constructor", "label", "todo", "note"] },
+          "additionalProperties": { "$ref": "#/$defs/style" }
+        },
+        "diagnostic": { "$ref": "#/$defs/colorBlock", "required": ["error", "warning", "info", "hint", "ok"],
+                        "propertyNames": { "enum": ["error", "warning", "info", "hint", "ok"] } },
+        "git": { "$ref": "#/$defs/colorBlock", "required": ["add", "change", "delete"],
+                 "propertyNames": { "enum": ["add", "change", "delete"] } }
+      }
+    },
+    "terminal": {
+      "type": "object",
+      "required": ["background", "foreground", "cursor", "cursor_text", "selection_background",
+                   "selection_foreground", "normal", "bright"],
+      "additionalProperties": false,
+      "properties": {
+        "background": { "$ref": "#/$defs/colorRef" },
+        "foreground": { "$ref": "#/$defs/colorRef" },
+        "cursor": { "$ref": "#/$defs/colorRef" },
+        "cursor_text": { "$ref": "#/$defs/colorRef" },
+        "selection_background": { "$ref": "#/$defs/colorRef" },
+        "selection_foreground": { "$ref": "#/$defs/colorRef" },
+        "normal": { "$ref": "#/$defs/ansi" },
+        "bright": { "$ref": "#/$defs/ansi" }
+      }
+    }
+  },
+  "$defs": {
+    "name": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+    "hex": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
+    "number": { "type": "number" },
+    "colorValue": {
+      "description": "Name, role path (group.role) or one-key expression object. Hex literals are rejected outside palette.",
+      "oneOf": [
+        { "type": "string", "minLength": 1 },
+        { "$ref": "#/$defs/expression" }
+      ]
+    },
+    "colorRef": {
+      "description": "A colorValue that is not a hex literal.",
+      "allOf": [ { "$ref": "#/$defs/colorValue" }, { "not": { "$ref": "#/$defs/hex" } } ]
+    },
+    "expression": {
+      "type": "object",
+      "minProperties": 1,
+      "maxProperties": 1,
+      "additionalProperties": false,
+      "properties": {
+        "mix": { "type": "array", "prefixItems": [ { "$ref": "#/$defs/colorRef" }, { "$ref": "#/$defs/colorRef" },
+                                                   { "$ref": "#/$defs/number" } ], "items": false, "minItems": 3 },
+        "lighten": { "$ref": "#/$defs/unaryArgs" },
+        "darken": { "$ref": "#/$defs/unaryArgs" },
+        "raise": { "$ref": "#/$defs/unaryArgs" },
+        "chroma": { "$ref": "#/$defs/unaryArgs" }
+      }
+    },
+    "unaryArgs": {
+      "type": "array",
+      "prefixItems": [ { "$ref": "#/$defs/colorRef" }, { "$ref": "#/$defs/number" } ],
+      "items": false,
+      "minItems": 2
+    },
+    "colorBlock": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/colorRef" }
+    },
+    "style": {
+      "type": "object",
+      "required": ["fg"],
+      "additionalProperties": false,
+      "properties": {
+        "fg": { "$ref": "#/$defs/colorRef" },
+        "bg": { "$ref": "#/$defs/colorRef" },
+        "sp": { "$ref": "#/$defs/colorRef" },
+        "bold": { "type": "boolean" },
+        "italic": { "type": "boolean" },
+        "underline": { "type": "boolean" },
+        "undercurl": { "type": "boolean" },
+        "strikethrough": { "type": "boolean" },
+        "reverse": { "type": "boolean" }
+      }
+    },
+    "ansi": {
+      "type": "object",
+      "required": ["black", "red", "green", "yellow", "blue", "magenta", "cyan", "white"],
+      "additionalProperties": false,
+      "properties": {
+        "black": { "$ref": "#/$defs/colorRef" }, "red": { "$ref": "#/$defs/colorRef" },
+        "green": { "$ref": "#/$defs/colorRef" }, "yellow": { "$ref": "#/$defs/colorRef" },
+        "blue": { "$ref": "#/$defs/colorRef" }, "magenta": { "$ref": "#/$defs/colorRef" },
+        "cyan": { "$ref": "#/$defs/colorRef" }, "white": { "$ref": "#/$defs/colorRef" }
+      }
+    }
+  }
+}

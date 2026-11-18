@@ -5,8 +5,9 @@ environment access and no hard-coded colours.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import ClassVar, Sequence
+from dataclasses import dataclass, field
+from typing import Callable, ClassVar, Sequence
+from warnings import warn as _warn
 
 from .. import __version__
 from ..scheme.model import Scheme
@@ -22,6 +23,7 @@ class RenderContext:
     lua_module: str = ""
     url: str = ""
     tools_version: str = __version__
+    warn: Callable[[str], None] = field(default=_warn, compare=False, repr=False)
 
     def header(self, prefix: str, scheme: Scheme | None = None, usage: str | None = None) -> str:
         """Comment banner ending with a newline: description, generated-by notice and optional usage line."""

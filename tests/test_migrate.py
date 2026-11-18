@@ -2,7 +2,7 @@
 import unittest
 
 from cstools.highlights import groups as groups_module
-from cstools.highlights.groups import build_groups
+from cstools.highlights.groups import CORE_SECTIONS, build_groups
 from cstools.scheme.assemble import ACCENT_KEYS, assemble_scheme
 from cstools.scheme.expr import SchemeError
 from cstools.scheme.migrate import migrate_v1, read_recipe_metadata
@@ -17,7 +17,8 @@ class MigrationRegressionTest(unittest.TestCase):
     def test_highlights_equal_v1_exactly(self) -> None:
         for sid in SCHEME_IDS:
             with self.subTest(sid):
-                got = {g: st.to_dict() for g, st in build_groups(migrated(sid)).items()}
+                scheme = migrated(sid)
+                got = {g: st.to_dict() for section in CORE_SECTIONS for g, st in section(scheme).items()}
                 want = v1_highlights(sid)
                 self.assertEqual(list(got), list(want))
                 for group in want:
@@ -87,12 +88,23 @@ class LegacyTemplateParityTest(unittest.TestCase):
                 # legacy passes input hex through unchanged (one style uses upper case); cstools lowercases
                 want = {g: {k: v.lower() if isinstance(v, str) else v for k, v in e.items() if v}
                         for g, e in gen.groups_for(st, st["a"]).items()}
-                got = {g: s.to_dict() for g, s in build_groups(scheme).items()}
+                got = {g: s.to_dict() for section in CORE_SECTIONS for g, s in section(scheme).items()}
                 self.assertEqual(got, want)
                 self.assertEqual([scheme.ansi(i) for i in range(16)], [h.lower() for h in term])
 
     def test_plugin_sections_are_discovered(self) -> None:
-        self.assertEqual(groups_module.plugin_sections(), [])  # empty package for now
+        sections = groups_module.plugin_sections()
+        names = {section.__module__.rsplit('.', 1)[-1] for section in sections}
+        self.assertEqual(names, {'blink', 'codecompanion', 'copilot_chat', 'diffview', 'editor', 'gitsigns',
+                                 'ibl', 'lazy', 'lspsaga', 'mason', 'nvim_tree', 'telescope', 'vimwiki', 'which_key'})
+        for sid in SCHEME_IDS:
+            scheme = migrated(sid)
+            core = {g: style for section in CORE_SECTIONS for g, style in section(scheme).items()}
+            full = build_groups(scheme)
+            for section in sections:
+                self.assertFalse(core.keys() & section(scheme).keys(), section.__module__)
+            for name, style in core.items():
+                self.assertEqual(full[name], style, f'{sid} {name}')
 
 
 if __name__ == "__main__":

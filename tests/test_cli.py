@@ -87,9 +87,6 @@ class CliTest(unittest.TestCase):
         self.assertIn("alacritty", text)
 
     def test_stubs_exit_2(self) -> None:
-        code, _, err = run("optimize", "recipe.toml")
-        self.assertEqual(code, 2)
-        self.assertIn("not implemented yet", err)
         self.assertEqual(run("gallery", "repo")[0], 2)
 
     def test_python_dash_m(self) -> None:

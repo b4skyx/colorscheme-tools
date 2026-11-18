@@ -19,3 +19,4 @@ where = ["src"]
 
 [tool.setuptools.package-data]
 "cstools.targets" = ["*.lua", "neovim_runtime/*.lua"]
+"cstools.gallery" = ["assets/*"]

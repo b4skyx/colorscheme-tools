@@ -193,9 +193,17 @@ def cmd_targets(args: argparse.Namespace) -> int:
     return 0
 
 
-def cmd_not_implemented(args: argparse.Namespace) -> int:
-    print(f"cstools {args.command}: not implemented yet", file=sys.stderr)
-    return 2
+def cmd_gallery(args: argparse.Namespace) -> int:
+    """Build the offline gallery using the selected vision model."""
+    from .gallery import build_gallery
+
+    if not args.output:
+        print("cstools gallery: -o/--output is required", file=sys.stderr)
+        return 2
+    model = VisionModel.from_dict(_read_json(args.model)) if args.model else DEFAULT
+    for path in build_gallery(args.repo, args.output, args.extra_dumps, model):
+        print(f"wrote {path}")
+    return 0
 
 
 def make_parser() -> argparse.ArgumentParser:
@@ -253,11 +261,12 @@ def make_parser() -> argparse.ArgumentParser:
     s = sub.add_parser("targets", help="list registered targets")
     s.set_defaults(func=cmd_targets)
 
-    s = sub.add_parser("gallery", help="HTML gallery (not implemented yet)")
+    s = sub.add_parser("gallery", help="build an offline HTML gallery")
     s.add_argument("repo", metavar="REPO")
-    s.add_argument("-o", "--output", metavar="DIR")
-    s.add_argument("--extra-dumps", metavar="DIR")
-    s.set_defaults(func=cmd_not_implemented)
+    s.add_argument("-o", "--output", metavar="DIR", help="required output directory")
+    s.add_argument("--extra-dumps", metavar="DIR", help="optional Neovim comparison dumps")
+    s.add_argument("--model", metavar="MODEL.json", help="vision model (default: deutan, severity 1)")
+    s.set_defaults(func=cmd_gallery)
     return p
 
 

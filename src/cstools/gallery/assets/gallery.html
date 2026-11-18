@@ -1,0 +1,672 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Colorscheme gallery</title>
+<style>
+  :root { color-scheme: dark; --ui: #17181b; --ui2: #1f2125; --line: #2c2f34; --txt: #d0d3d8; --mut: #8a9099; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--ui); color: var(--txt); font: 14px/1.45 system-ui, sans-serif; }
+  header { display: flex; gap: 14px; align-items: center; padding: 10px 16px; border-bottom: 1px solid var(--line); background: var(--ui2); position: sticky; top: 0; z-index: 5; flex-wrap: wrap; }
+  header h1 { font-size: 16px; margin: 0 8px 0 0; font-weight: 600; }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  .seg button { background: transparent; color: var(--txt); border: 0; padding: 5px 11px; cursor: pointer; font-size: 13px; }
+  .seg button.on { background: #3a3e45; }
+  label.tg { display: inline-flex; gap: 6px; align-items: center; font-size: 13px; color: var(--mut); cursor: pointer; }
+  select, input, textarea { background: #24262a; color: var(--txt); border: 1px solid var(--line); border-radius: 6px; padding: 4px 6px; font: inherit; }
+  button.b { background: #2b2e33; color: var(--txt); border: 1px solid #3a3e45; border-radius: 7px; padding: 5px 11px; cursor: pointer; }
+  main { display: grid; grid-template-columns: 290px 1fr; min-height: calc(100% - 52px); }
+  aside { border-right: 1px solid var(--line); overflow-y: auto; max-height: calc(100vh - 52px); position: sticky; top: 52px; }
+  .grp { padding: 10px 14px 4px; color: var(--mut); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; }
+  .item { padding: 7px 14px; cursor: pointer; display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; border-left: 3px solid transparent; }
+  .item:hover { background: #1d1f23; } .item.sel { background: #23262b; border-left-color: #8aa; }
+  .item .nm { font-weight: 500; } .item .sc { font-size: 11px; color: var(--mut); text-align: right; }
+  .sw { display: flex; gap: 2px; grid-column: 1 / -1; } .sw span { width: 15px; height: 9px; border-radius: 2px; }
+  .stars { color: #d9b45b; font-size: 11px; }
+  #view { padding: 16px 20px 60px; overflow-x: auto; }
+  .card { background: var(--ui2); border: 1px solid var(--line); border-radius: 10px; padding: 12px 16px; margin-bottom: 14px; }
+  .title { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; } .title h2 { margin: 0; font-size: 20px; }
+  .badge { font-size: 11px; padding: 1px 8px; border-radius: 10px; background: #2e3238; color: #b9c0c8; }
+  .badge.scheme { background: #23384a; color: #a9d0f0; } .badge.comparison { background: #3a3424; color: #f0d9a0; }
+  .metrics { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+  .m { background: #24272c; border-radius: 8px; padding: 6px 10px; min-width: 120px; } .m b { display: block; font-size: 16px; }
+  .m span { font-size: 11px; color: var(--mut); } .good { color: #8fc1ff; } .ok { color: #e6d38a; } .bad { color: #f0a35e; }
+  /* editor */
+  .panes { display: grid; gap: 14px; grid-template-columns: 1fr; }
+  .panes.two { grid-template-columns: 1fr 1fr; }
+  .ed { font-family: "CodeliaLigatures Nerd Font", "JetBrains Mono", "Fira Code", monospace; font-size: 13.5px; line-height: 1.5; border-radius: 8px; overflow: hidden; position: relative; border: 1px solid #000; }
+  .ed .tab { display: flex; font-size: 12.5px; } .ed .tab span { padding: 3px 12px; }
+  .row { display: flex; white-space: pre; min-height: 1.5em; }
+  .sg { width: 1.3ch; text-align: center; flex: none; } .nr { width: 4ch; text-align: right; padding-right: 1.2ch; flex: none; }
+  .code { flex: 1; padding-right: 2ch; }
+  .vt { margin-left: 2ch; padding: 0 .6ch; border-radius: 3px; }
+  .status { display: flex; white-space: pre; font-size: 12.5px; } .status .fill { flex: 1; }
+  .pm { position: absolute; border-radius: 4px; padding: 2px 0; box-shadow: 0 6px 20px #0008; z-index: 2; }
+  .pm div { padding: 0 1ch; white-space: pre; display: flex; gap: 2ch; justify-content: space-between; }
+  .term { font-family: "CodeliaLigatures Nerd Font", "JetBrains Mono", monospace; font-size: 13px; padding: 10px 12px; border-radius: 8px; white-space: pre; line-height: 1.45; border: 1px solid #000; overflow-x: auto; }
+  .legend { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; }
+  .chip { display: flex; align-items: center; gap: 8px; font-size: 12px; padding: 4px 6px; background: #24272c; border-radius: 6px; }
+  .chip i { width: 18px; height: 18px; border-radius: 4px; flex: none; border: 1px solid #0006; }
+  .lost { color: #f0b37e; font-size: 12.5px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(430px, 1fr)); gap: 14px; }
+  .gcard { cursor: pointer; } .gcard .hd { display: flex; justify-content: space-between; align-items: baseline; padding: 6px 2px; }
+  .rate button { background: none; border: 0; font-size: 20px; cursor: pointer; color: #555; padding: 0 2px; } .rate button.on { color: #e3b84f; }
+  .fav.on { color: #ff9eb8 !important; }
+  .muted { color: var(--mut); } h3 { margin: 4px 0 8px; font-size: 14px; }
+  .help { font-size: 12.5px; color: var(--mut); max-width: 900px; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute"><filter id="sim" color-interpolation-filters="linearRGB"><feColorMatrix id="simm" type="matrix" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 1 0"/></filter></svg>
+<header>
+  <h1>🎨 Colorscheme gallery</h1>
+  <div class="seg" id="mode"><button data-v="grid" class="on">Overview</button><button data-v="detail">Detail</button></div>
+  <div class="seg" id="filter">
+    <button data-v="scheme" class="on">Schemes</button><button data-v="comparison">Comparison themes</button>
+    <button data-v="picked">♥ Picks</button><button data-v="light">☀ Light</button><button data-v="all">All</button>
+  </div>
+  <div class="seg" id="lang"><button data-v="lua" class="on">Lua</button><button data-v="python">Python</button><button data-v="ts">TypeScript</button><button data-v="rust">Rust</button></div>
+  <label class="tg"><input type="checkbox" id="simt"> <span id="simlabel">Simulate deutan vision</span></label>
+  <span class="muted" id="ratedc"></span>
+  <button class="b" id="save">Save my picks</button>
+</header>
+<main>
+  <aside id="list"></aside>
+  <section id="view"></section>
+</main>
+<details class="card help" style="margin:16px">
+  <summary>Comparison theme dumps</summary>
+  <p>Use the packaged <code>cstools/gallery/assets/dump.lua</code> with headless Neovim:
+    <code>CS=theme PRE='vim.opt.rtp:prepend("/path/to/theme-runtime")' OUT=/tmp/theme.json nvim --headless -u NONE -l /path/to/dump.lua</code>.
+    Use disposable <code>XDG_CONFIG_HOME</code>, <code>XDG_CACHE_HOME</code>, <code>XDG_DATA_HOME</code> and <code>XDG_STATE_HOME</code> directories.
+    Then rebuild with <code>cstools gallery REPO -o OUTDIR --extra-dumps /path/to/dumps</code>.
+    Full instructions are in the packaged assets/README.md.</p>
+</details>
+<script src="gallery_data.js"></script>
+<script>
+window.onerror = (message, source, line, column) => {
+  const error = document.createElement("pre");
+  error.textContent = `JS error: ${message} @${line}:${column}`;
+  document.body.prepend(error);
+};
+</script>
+<script>
+"use strict";
+// ---------------- code samples ----------------
+const SAMPLES = {
+lua: { name: "statusline.lua", src: String.raw`-- Format buffer names for the statusline. TODO: cache results
+local api = vim.api
+local M = {}
+
+local MAX_WIDTH = 40
+local icons = { modified = "●", readonly = "RO", unnamed = "[No Name]" }
+
+---@param bufnr integer
+---@return string
+function M.format_name(bufnr, opts)
+  opts = opts or {}
+  local name = api.nvim_buf_get_name(bufnr)
+  if name == "" then
+    return icons.unnamed
+  end
+
+  local short = vim.fn.fnamemodify(name, ":~:.")
+  if #short > MAX_WIDTH and not opts.full then
+    short = "…" .. short:sub(-MAX_WIDTH + 1)
+  end
+
+  for _, flag in ipairs({ "modified", "readonly" }) do
+    if vim.bo[bufnr][flag] then
+      short = string.format("%s %s\n", short, icons[flag])
+    end
+  end
+  return short, true, nil
+end
+
+function M.setup(config)
+  M.config = vim.tbl_deep_extend("force", { enabled = true, width = 0.5 }, config or {})
+  print(M.formt_name(0))
+end
+
+return M`,
+  compactStart: 7, cursor: 11, visual: [16, 18], search: "icons", git: { 4: "add", 5: "add", 16: "change", 21: "add", 22: "add", 23: "add", 24: "add", 25: "add", 26: "delete" },
+  diag: [{ l: 31, m: "formt_name", s: "Error", t: "Undefined field `formt_name`" }, { l: 26, m: "nil", s: "Warn", t: "Redundant return value" },
+         { l: 9, m: "opts", s: "Hint", t: "Missing type annotation" }, { l: 4, m: "MAX_WIDTH", s: "Info", t: "Set from user config" }],
+  pmenu: { after: 16, col: 30, items: [["format_name", "Function", "function"], ["config", "Field", "property"], ["MAX_WIDTH", "Constant", "constant"], ["setup", "Function", "function"], ["for", "Keyword", "keyword"]] } },
+python: { name: "fetch.py", src: String.raw`# Retry an HTTP request with exponential backoff. FIXME: honour Retry-After
+import asyncio
+from dataclasses import dataclass
+from pathlib import Path
+
+DEFAULT_RETRIES = 3
+log_dir = Path("~/.cache/fetcher").expanduser()
+
+@dataclass
+class Response:
+    status: int
+    body: str = ""
+
+    def ok(self) -> bool:
+        return 200 <= self.status < 300
+
+
+async def fetch(url: str, retries: int = DEFAULT_RETRIES, *, timeout=2.5) -> Response:
+    """Fetch url, retrying on 5xx errors."""
+    for attempt in range(retries):
+        try:
+            resp = await client.get(url, timeout=timeout)
+            if resp.ok() or attempt == retries - 1:
+                return resp
+        except TimeoutError as err:
+            print(f"attempt {attempt}: {err}\n")
+        await asyncio.sleep(2 ** attempt * 0.1)
+    raise RuntimeError("unreachable") from None`,
+  compactStart: 8, cursor: 21, visual: [13, 14], search: "retries", git: { 5: "add", 6: "change", 19: "add", 20: "add", 21: "change", 26: "delete" },
+  diag: [{ l: 21, m: "client", s: "Error", t: "\"client\" is not defined" }, { l: 6, m: "log_dir", s: "Warn", t: "Variable not accessed" },
+         { l: 17, m: "timeout", s: "Hint", t: "Missing annotation" }, { l: 27, m: "RuntimeError", s: "Info", t: "Consider a custom exception" }],
+  pmenu: { after: 13, col: 24, items: [["resp", "Variable", "text"], ["retries", "Parameter", "parameter"], ["Response", "Class", "type"], ["DEFAULT_RETRIES", "Constant", "constant"], ["return", "Keyword", "keyword"]] } },
+ts: { name: "searcher.ts", src: String.raw`// Debounced search box state. NOTE: runs in the browser
+import { readFile } from "fs/promises";
+import type { Query, Result } from "./types";
+
+const DEBOUNCE_MS = 150;
+export enum Mode { Fuzzy, Exact }
+
+interface Options {
+  limit?: number;
+  mode: Mode;
+}
+
+export class Searcher<T extends Result> {
+  private cache = new Map<string, T[]>();
+  constructor(private readonly index: T[], private opts: Options) {}
+
+  async search(query: Query, signal?: AbortSignal): Promise<T[]> {
+    const key = ` + "`${query.text}:${this.opts.mode}`" + String.raw`;
+    if (this.cache.has(key)) return this.cache.get(key)!;
+    await new Promise((r) => setTimeout(r, DEBOUNCE_MS));
+    const hits = this.index.filter((item) => item.title.includes(query.text));
+    this.cache.set(key, hits.slice(0, this.opts.limit ?? 20));
+    console.log("hits:", hits.length, typeof signal === "undefined");
+    return hits;
+  }
+}`,
+  compactStart: 4, cursor: 20, visual: [8, 10], search: "cache", git: { 4: "add", 5: "add", 13: "change", 19: "add", 20: "change", 22: "delete" },
+  diag: [{ l: 20, m: "title", s: "Error", t: "Property 'title' does not exist on type 'T'" }, { l: 1, m: "readFile", s: "Warn", t: "'readFile' is declared but never used" },
+         { l: 18, m: "!", s: "Hint", t: "Non-null assertion" }, { l: 4, m: "150", s: "Info", t: "Debounce in ms" }],
+  pmenu: { after: 13, col: 30, items: [["cache", "Property", "property"], ["search", "Method", "function"], ["Searcher", "Class", "type"], ["DEBOUNCE_MS", "Constant", "constant"], ["async", "Keyword", "keyword"]] } },
+rust: { name: "config.rs", src: String.raw`// Parse a key=value config file. TODO: support sections
+use std::collections::HashMap;
+use std::fs;
+
+const MAX_LINE: usize = 1024;
+
+#[derive(Debug, Default)]
+pub struct Config {
+    pub name: String,
+    pub retries: u32,
+    values: HashMap<String, String>,
+}
+
+impl Config {
+    pub fn parse(input: &str, strict: bool) -> Result<Self, String> {
+        let mut cfg = Self::default();
+        for (n, line) in input.lines().enumerate() {
+            if line.len() > MAX_LINE || line.starts_with('#') {
+                continue;
+            }
+            match line.split_once('=') {
+                Some((k, v)) => { cfg.values.insert(k.trim().into(), v.trim().into()); }
+                None if strict => return Err(format!("line {}: missing '='\n", n + 1)),
+                None => {}
+            }
+        }
+        cfg.retries = cfg.values.get("retries").and_then(|v| v.parse().ok()).unwrap_or(3);
+        println!("loaded {} keys", cfg.values.len());
+        Ok(cfg)
+    }
+}`,
+  compactStart: 13, cursor: 16, visual: [20, 24], search: "values", git: { 4: "add", 9: "add", 15: "change", 26: "change", 27: "add", 28: "delete" },
+  diag: [{ l: 26, m: "parse", s: "Error", t: "type annotations needed" }, { l: 2, m: "fs", s: "Warn", t: "unused import: `std::fs`" },
+         { l: 8, m: "name", s: "Hint", t: "field `name` is never read" }, { l: 4, m: "1024", s: "Info", t: "bytes" }],
+  pmenu: { after: 16, col: 34, items: [["values", "Field", "property"], ["parse", "Method", "function"], ["Config", "Struct", "type"], ["MAX_LINE", "Constant", "constant"], ["match", "Keyword", "keyword"]] } },
+};
+
+// ---------------- tokenizer -> treesitter-style captures ----------------
+const LANG = {
+  lua: { kw: "local function end if then else elseif for in do while repeat until return break and or not goto".split(" "),
+         lit: { true: "@boolean", false: "@boolean", nil: "@constant.builtin" }, self: ["self"], builtinFn: "print require pairs ipairs error type tostring tonumber".split(" "),
+         builtinMod: ["vim", "string", "table", "math"], builtinType: [], line: "--" },
+  python: { kw: "def class return if elif else for while in not and or is import from as with try except finally raise pass break continue lambda yield async await global".split(" "),
+         lit: { True: "@boolean", False: "@boolean", None: "@constant.builtin" }, self: ["self", "cls"], builtinFn: "print len range isinstance str int dict list open super enumerate".split(" "),
+         builtinMod: [], builtinType: "str int float bool dict list tuple set bytes".split(" "), line: "#" },
+  ts: { kw: "const let var function return if else for while of in new class extends implements interface type enum import from export default async await try catch finally throw typeof instanceof switch case break continue private public readonly static".split(" "),
+         lit: { true: "@boolean", false: "@boolean", null: "@constant.builtin", undefined: "@constant.builtin" }, self: ["this"], builtinFn: ["setTimeout", "fetch"],
+         builtinMod: ["console", "Math", "JSON"], builtinType: "string number boolean void any unknown never".split(" "), line: "//" },
+  rust: { kw: "fn let mut pub struct enum impl trait use mod match if else for while loop in return as where crate super const static async await move ref dyn continue break".split(" "),
+         lit: { true: "@boolean", false: "@boolean" }, self: ["self"], builtinFn: [], builtinMod: [], ctor: ["Some", "None", "Ok", "Err"],
+         builtinType: "i32 i64 u8 u32 u64 usize f32 f64 bool str char Self".split(" "), line: "//" },
+};
+const KWCAP = {
+  "@keyword.function": ["function", "def", "fn", "lambda"], "@keyword.return": ["return", "yield"],
+  "@keyword.conditional": ["if", "then", "else", "elseif", "elif", "match", "switch", "case"],
+  "@keyword.repeat": ["for", "while", "loop", "repeat", "until", "do", "continue", "break"],
+  "@keyword.import": ["import", "from", "use", "export", "mod", "default"],
+  "@keyword.operator": ["and", "or", "not", "in", "is", "typeof", "instanceof", "as", "of", "new"],
+  "@keyword.exception": ["try", "except", "catch", "finally", "raise", "throw"], "@keyword.coroutine": ["async", "await"],
+  "@keyword.type": ["struct", "enum", "class", "interface", "type", "trait", "impl"],
+  "@keyword.modifier": ["local", "const", "let", "var", "mut", "pub", "static", "readonly", "private", "public", "global", "extends", "implements", "where", "dyn", "ref", "move", "crate", "super"],
+};
+const kwCap = w => { for (const [c, ws] of Object.entries(KWCAP)) if (ws.includes(w)) return c; return "@keyword"; };
+function lex(src, lang) {
+  const L = LANG[lang], out = [];
+  const rules = [
+    ["nl", /\n/y], ["ws", /[ \t]+/y],
+    ["comment", lang === "lua" ? /--[^\n]*/y : lang === "python" ? /#[^\n]*/y : /\/\/[^\n]*/y],
+    ["attr", lang === "python" ? /@[A-Za-z_][\w.]*/y : lang === "rust" ? /#\[[^\]\n]*\]/y : /(?!)/y],
+    ["string", lang === "python" ? /[fbr]?"""[\s\S]*?"""|[fbr]?"(?:\\.|[^"\\\n])*"|[fbr]?'(?:\\.|[^'\\\n])*'/y :
+               lang === "ts" ? /"(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*'|`(?:\\.|[^`\\])*`/y :
+               lang === "rust" ? /"(?:\\.|[^"\\\n])*"/y : /"(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*'|\[\[[\s\S]*?\]\]/y],
+    ["char", lang === "rust" ? /'(?:\\.|[^'\\])'/y : /(?!)/y],
+    ["number", /0x[0-9a-fA-F]+|\d[\d_]*(?:\.\d+)?/y], ["ident", /[A-Za-z_][A-Za-z0-9_]*/y],
+    ["punct", /::|\.\.\.|[,;.:]/y], ["bracket", /[()[\]{}]/y], ["op", /===|!==|==|~=|!=|<=|>=|=>|->|\?\?|\.\.|&&|\|\||\*\*|[-+*/%=<>!&|^~?#]/y], ["other", /[\s\S]/y],
+  ];
+  let i = 0;
+  while (i < src.length) {
+    for (const [k, re] of rules) { re.lastIndex = i; const m = re.exec(src); if (m) { out.push({ k, t: m[0] }); i += m[0].length; break; } }
+  }
+  // assign captures
+  const sig = out.map((x, j) => j).filter(j => !["ws", "nl"].includes(out[j].k));
+  const prevS = j => { const p = sig.indexOf(j); return p > 0 ? out[sig[p - 1]] : null; };
+  const nextS = (j, n = 1) => { const p = sig.indexOf(j); return out[sig[p + n]] || null; };
+  let defNext = false, pendingParams = false, inParams = 0, paramNames = new Set(), importLine = false, braces = 0, afterColonType = false;
+  const lineStartIdx = j => { let k = j - 1; while (k >= 0 && out[k].k !== "nl") { if (out[k].k !== "ws") return false; k--; } return true; };
+  const lineEndsBrace = j => { let k = j; while (k < out.length && out[k].k !== "nl") k++; k--; while (k > j && out[k].k === "ws") k--; if (!out[k]) return false; if (out[k].t === "{") return true; let q = k - 1; while (q > j && out[q].k === "ws") q--; return out[k].t === "}" && out[q] && out[q].t === "{"; };
+  for (let j = 0; j < out.length; j++) {
+    const x = out[j];
+    if (x.k === "nl") { importLine = false; afterColonType = false; continue; }
+    if (x.k === "ws") continue;
+    const p = prevS(j), n = nextS(j);
+    if (x.k === "comment") { x.c = (lang === "lua" && x.t.startsWith("---")) ? "@comment.documentation" : "@comment"; continue; }
+    if (x.k === "attr") { x.c = "@attribute"; continue; }
+    if (x.k === "string") { x.c = (lang === "python" && x.t.startsWith('"""')) ? "@string.documentation" : "@string"; continue; }
+    if (x.k === "char") { x.c = "@character"; continue; }
+    if (x.k === "number") { x.c = x.t.includes(".") ? "@number.float" : "@number"; continue; }
+    if (x.k === "bracket") {
+      if (x.t === "{") braces++; if (x.t === "}") braces--;
+      if (x.t === "(" && pendingParams) { inParams = 1; pendingParams = false; }
+      else if (inParams) { if (x.t === "(") inParams++; if (x.t === ")") inParams--; }
+      x.c = "@punctuation.bracket"; continue;
+    }
+    if (x.k === "punct") {
+      x.c = "@punctuation.delimiter";
+      if (x.t === ":" && (inParams || lang === "ts" || lang === "rust" || lang === "python")) afterColonType = true;
+      if (x.t === ",") afterColonType = false;
+      continue;
+    }
+    if (x.k === "op") { x.c = (lang === "rust" && x.t === "!" && p && p.c === "@function.macro") ? "@function.macro" : "@operator"; if (x.t === "=" ) afterColonType = false; if (x.t === "->") afterColonType = true; continue; }
+    if (x.k !== "ident") { x.c = "@punctuation"; continue; }
+    const w = x.t;
+    if (L.kw.includes(w) && !(p && p.t === ".")) {
+      x.c = kwCap(w);
+      if (["function", "def", "fn"].includes(w)) defNext = true;
+      if (["import", "from", "use"].includes(w)) importLine = true;
+      continue;
+    }
+    if (Object.hasOwn(L.lit, w)) { x.c = L.lit[w]; continue; }
+    if (L.self.includes(w)) { x.c = "@variable.builtin"; continue; }
+    if (L.ctor && L.ctor.includes(w)) { x.c = "@constructor"; continue; }
+    if (lang === "rust" && n && n.t === "!") { x.c = "@function.macro"; continue; }
+    const call = n && n.t === "(";
+    const memberAccess = p && (p.t === "." || (lang === "lua" && p.t === ":"));
+    if (importLine && !call) { x.c = /^[A-Z]/.test(w) ? "@type" : (lang === "ts" && braces > 0) ? "@variable" : "@module"; continue; }
+    if (defNext && call) { x.c = memberAccess ? "@function.method" : "@function"; defNext = false; pendingParams = true; paramNames = new Set(); continue; }
+    if (defNext && !call && n && (n.t === "." || n.t === ":")) { x.c = "@module"; continue; }
+    if (!defNext && call && lang === "ts" && (lineStartIdx(j) || (p && ["async", "static", "private", "public"].includes(p.t))) && lineEndsBrace(j)) {
+      x.c = w === "constructor" ? "@constructor" : "@function.method"; pendingParams = true; paramNames = new Set(); continue;
+    }
+    if (inParams && !afterColonType && !(p && p.t === ".") && !/^[A-Z]/.test(w) && !L.builtinType.includes(w)) {
+      if (!["private", "readonly", "public"].includes(w)) { x.c = "@variable.parameter"; paramNames.add(w); continue; }
+    }
+    if (/^[A-Z][A-Z0-9_]+$/.test(w) && w.length > 1) { x.c = "@constant"; continue; }
+    if (call) {
+      if (memberAccess) { x.c = "@function.method.call"; continue; }
+      if (L.builtinFn.includes(w) || (lang === "python" && L.builtinType.includes(w))) { x.c = "@function.builtin"; continue; }
+      if (/^[A-Z]/.test(w)) { x.c = "@constructor"; continue; }
+      x.c = "@function.call"; continue;
+    }
+    if (L.builtinType.includes(w)) { x.c = "@type.builtin"; continue; }
+    if (/^[A-Z]/.test(w) && lang !== "lua") { x.c = "@type"; continue; }
+    if (L.builtinMod.includes(w)) { x.c = "@module.builtin"; continue; }
+    if (memberAccess) { x.c = "@variable.member"; continue; }
+    if (braces > 0 && n && (n.t === "=" || (lang === "ts" && n.t === ":")) && p && (p.t === "{" || p.t === ",")) { x.c = "@variable.member"; continue; }
+    if (lang === "rust" && n && n.t === ":" && p && (p.t === "{" || p.t === "," || p.t === "pub")) { x.c = "@variable.member"; continue; }
+    if (lang === "python" && n && n.t === ":" && lineStartIdx(j)) { x.c = "@variable.member"; continue; }
+    if (paramNames.has(w)) { x.c = "@variable.parameter"; continue; }
+    if (lang === "rust" && p && p.t === "::" ) { x.c = "@function.call"; continue; }
+    x.c = "@variable";
+  }
+  // split into lines; split comments on TODO/FIXME/NOTE
+  const lines = [[]];
+  for (const x of out) {
+    if (x.k === "nl") { lines.push([]); continue; }
+    if (x.k === "comment") {
+      const parts = x.t.split(/(TODO|FIXME|NOTE|HACK)/);
+      for (const s of parts) if (s) lines[lines.length - 1].push({ t: s, c: s === "TODO" ? "@comment.todo" : s === "NOTE" ? "@comment.note" : (s === "FIXME" || s === "HACK") ? "@comment.warning" : x.c });
+      continue;
+    }
+    if (x.k === "string" && x.t.includes("\\")) {
+      for (const s of x.t.split(/(\\.)/)) if (s) lines[lines.length - 1].push({ t: s, c: /^\\./.test(s) ? "@string.escape" : x.c });
+      continue;
+    }
+    lines[lines.length - 1].push({ t: x.t, c: x.c || null });
+  }
+  return lines;
+}
+
+// ---------------- highlight resolution ----------------
+const LEGACY = { "@keyword": "Keyword", "@function": "Function", "@string": "String", "@type": "Type", "@constant": "Constant", "@number": "Number",
+  "@boolean": "Boolean", "@comment": "Comment", "@operator": "Operator", "@punctuation": "Delimiter", "@variable": "Identifier", "@property": "Identifier",
+  "@module": "Identifier", "@attribute": "PreProc", "@constructor": "Type", "@character": "String", "@label": "Statement" };
+function hl(S, name) {
+  let n = name;
+  while (n) {
+    const g = S.groups[n];
+    if (g && Object.values(g).some(Boolean)) return g;
+    const k = n.lastIndexOf("."); if (k < 0) break; n = n.slice(0, k);
+  }
+  const root = "@" + name.slice(1).split(".")[0];
+  if (name.startsWith("@") && LEGACY[root] && S.groups[LEGACY[root]]) return S.groups[LEGACY[root]];
+  return {};
+}
+function base(S) { const N = S.groups.Normal; return { fg: N.fg, bg: N.bg }; }
+function css(g, extra = {}) {
+  if (g.reverse) g = { ...g, fg: g.bg, bg: g.fg };
+  let s = "";
+  if (g.fg) s += `color:${g.fg};`; if (g.bg) s += `background:${g.bg};`;
+  if (g.bold) s += "font-weight:700;"; if (g.italic) s += "font-style:italic;";
+  if (g.undercurl || g.underline) s += `text-decoration:underline ${g.undercurl ? "wavy" : "solid"} ${g.sp || g.fg || "currentColor"};text-decoration-skip-ink:none;text-underline-offset:3px;`;
+  if (g.strikethrough) s += "text-decoration:line-through;";
+  return s + (extra.s || "");
+}
+const esc = value => String(value).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+function roleColor(S, role) { return (S.score_roles && S.score_roles[role]) || null; }
+function gitColor(S, k) {
+  const chain = { add: ["GitSignsAdd", "Added", "@diff.plus", "DiffAdd"], change: ["GitSignsChange", "Changed", "@diff.delta", "DiffChange"], delete: ["GitSignsDelete", "Removed", "@diff.minus", "DiffDelete"] }[k];
+  for (const n of chain) { const g = S.groups[n]; if (g && g.fg) return g.fg; }
+  const g = S.groups[chain[3]]; return (g && g.bg) || base(S).fg;
+}
+const diagColor = (S, s) => (S.groups["Diagnostic" + s] || {}).fg || base(S).fg;
+
+// ---------------- renderers ----------------
+function renderEditor(S, langKey, opts = {}) {
+  const smp = SAMPLES[langKey], B = base(S), lines = lex(smp.src, langKey);
+  const ln = hl(S, "LineNr"), cl = hl(S, "CursorLine"), cln = hl(S, "CursorLineNr"), vis = hl(S, "Visual"), srch = hl(S, "Search"), st = hl(S, "StatusLine");
+  const start = opts.compact ? (smp.compactStart || 0) : 0;
+  const maxLines = opts.lines ? start + opts.lines : lines.length;
+  let h = `<div class="ed" style="background:${B.bg};color:${B.fg}">`;
+  if (!opts.compact) {
+    const tabSel = `background:${B.bg};color:${B.fg};font-weight:600`, tabOff = css({ fg: (st.fg || B.fg), bg: st.bg || B.bg });
+    h += `<div class="tab" style="${tabOff}"><span style="${tabSel}">  ${smp.name} </span><span>  init.lua </span><span style="opacity:.7">  README.md </span></div>`;
+  }
+  const diagBy = {}; for (const d of smp.diag) diagBy[d.l] = d;
+  for (let i = start; i < Math.min(maxLines, lines.length); i++) {
+    const isCur = i === smp.cursor && !opts.compact, isVis = !opts.compact && i >= smp.visual[0] && i <= smp.visual[1];
+    const rowBg = isVis ? (vis.bg || B.bg) : isCur ? (cl.bg || "") : "";
+    const d = !opts.compact ? diagBy[i] : null;
+    let code = "";
+    let underlined = false;
+    for (const tk of lines[i]) {
+      let g = tk.c ? hl(S, tk.c) : {};
+      let style = css(g);
+      if (!opts.compact && tk.t === smp.search) style += css(srch);
+      if (d && !underlined && tk.t === d.m) {
+        underlined = true;
+        const u = S.groups["DiagnosticUnderline" + d.s] || {};
+        style += `text-decoration:underline wavy ${u.sp || u.fg || diagColor(S, d.s)};text-decoration-skip-ink:none;text-underline-offset:3px;`;
+      }
+      code += `<span style="${style}">${esc(tk.t)}</span>`;
+    }
+    if (d) {
+      const vt = S.groups["DiagnosticVirtualText" + d.s] || {};
+      code += `<span class="vt" style="color:${vt.fg || diagColor(S, d.s)};${vt.bg ? "background:" + vt.bg : ""}">■ ${esc(d.t)}</span>`;
+    }
+    const gs = !opts.compact && smp.git[i] ? `<span style="color:${gitColor(S, smp.git[i])}">${smp.git[i] === "delete" ? "▁" : "▎"}</span>` : " ";
+    const ds = d ? `<span style="color:${diagColor(S, d.s)}">${d.s[0]}</span>` : " ";
+    const nrStyle = isCur ? css({ fg: cln.fg || B.fg, bg: cln.bg || cl.bg, bold: cln.bold }) : css({ fg: ln.fg || B.fg, bg: ln.bg });
+    h += `<div class="row" style="${rowBg ? "background:" + rowBg : ""}"><span class="sg">${ds}</span><span class="sg">${gs}</span><span class="nr" style="${nrStyle}">${opts.compact || isCur ? i + 1 : Math.abs(i - smp.cursor) || i + 1}</span><span class="code">${code}</span></div>`;
+  }
+  if (!opts.compact) {
+    const p = smp.pmenu, pm = hl(S, "Pmenu"), ps = hl(S, "PmenuSel");
+    const items = p.items.map(([w, kind, role], k) => {
+      const c = roleColor(S, role) || B.fg, sel = k === 0;
+      return `<div style="${css(sel ? { fg: ps.fg || B.fg, bg: ps.bg || B.bg, bold: ps.bold } : { fg: pm.fg || B.fg, bg: pm.bg || B.bg })}"><span>${esc(w)}</span><span style="color:${c}">${kind}</span></div>`;
+    }).join("");
+    h += `<div class="pm" style="top:calc(${p.after + 2} * 1.5em + 26px);left:calc(${p.col + 8}ch);background:${pm.bg || B.bg}">${items}</div>`;
+    const mode = roleColor(S, "function") || B.fg;
+    const e = diagColor(S, "Error"), w = diagColor(S, "Warn");
+    h += `<div class="status" style="${css({ fg: st.fg || B.fg, bg: st.bg || B.bg })}"><span style="background:${mode};color:${B.bg};font-weight:700"> NORMAL </span>`
+       + `<span>  main </span><span style="color:${gitColor(S, "add")}">+3 </span><span style="color:${gitColor(S, "change")}">~2 </span><span style="color:${gitColor(S, "delete")}">-1 </span>`
+       + `<span class="fill"> ${smp.name}</span><span style="color:${e}"> E1 </span><span style="color:${w}">W1 </span><span>  ${langKey}  utf-8  ${smp.cursor + 1}:9 </span></div>`;
+  }
+  return h + "</div>";
+}
+
+function renderDiff(S) {
+  const B = base(S), A = hl(S, "DiffAdd"), D = hl(S, "DiffDelete"), C = hl(S, "DiffChange"), T = hl(S, "DiffText");
+  const row = (sign, g, html) => `<div class="row" style="${g.bg ? "background:" + g.bg : ""}"><span class="sg" style="color:${sign === "+" ? gitColor(S, "add") : sign === "-" ? gitColor(S, "delete") : sign === "~" ? gitColor(S, "change") : B.fg}">${sign}</span><span class="code" style="${g.fg ? "color:" + g.fg : ""}">${html}</span></div>`;
+  return `<div class="ed" style="background:${B.bg};color:${B.fg}">`
+    + row(" ", {}, "  local name = api.nvim_buf_get_name(bufnr)")
+    + row("-", D, "  if name == nil then")
+    + row("+", A, "  if name == \"\" then")
+    + row("+", A, "    log.debug(\"empty buffer name\")")
+    + row("~", C, `  return icons.<span style="${css(T)}">unnamed</span>`)
+    + row(" ", {}, "  end") + "</div>";
+}
+
+function renderTerm(S) {
+  const B = { bg: S.terminal_background, fg: S.terminal_foreground }, t = S.terminal;
+  const a = (i, txt, bold) => `<span style="color:${t[i] || B.fg};${bold ? "font-weight:700" : ""}">${esc(txt)}</span>`;
+  const pr = a(4, "~/proj ", true) + a(2, "❯ ", true);
+  return `<div class="term" style="background:${B.bg};color:${B.fg}">`
+    + pr + "ls\n" + a(4, "src", true) + "  " + a(4, "docs", true) + "  " + a(2, "build.sh", true) + "  " + a(6, "latest -> v2") + "  " + a(1, "backup.tar.gz") + "  " + a(5, "logo.png") + "  README.md\n"
+    + pr + "git status -s\n" + a(2, "M ") + " src/config.rs\n " + a(1, "M") + " src/main.rs\n" + a(2, "A ") + " src/cache.rs\n" + a(1, "??") + " notes.md\n"
+    + pr + "git diff --stat HEAD~1\n " + "src/config.rs | 12 " + a(2, "++++++++") + a(1, "----") + "\n"
+    + pr + "cargo test\n" + a(2, "test config::parse ... ok") + "\n" + a(1, "test cache::evict ... FAILED", true) + "\n"
+    + a(3, "warning", true) + ": unused import: `std::fs`\n" + a(1, "error[E0282]", true) + ": type annotations needed\n" + "  " + a(4, "-->", true) + " src/config.rs:27:62\n"
+    + a(6, "note") + ": run with `RUST_BACKTRACE=1`\n" + a(8, "# 16 colors: ") + [0, 1, 2, 3, 4, 5, 6, 7].map(i => `<span style="background:${t[i]}">  </span>`).join("") + " " + [8, 9, 10, 11, 12, 13, 14, 15].map(i => `<span style="background:${t[i]}">  </span>`).join("")
+    + "</div>";
+}
+
+// ---------------- scores / legend ----------------
+const ROLE_LABEL = { text: "variables / text", comment: "comment", keyword: "keyword", function: "function", string: "string", type: "type", constant: "constant",
+  number: "number", property: "property", parameter: "parameter", builtin: "builtin (self, nil…)", operator: "operator", err: "error", warn: "warning", info: "info", hint: "hint",
+  add: "git added", change: "git changed", delete: "git deleted" };
+let MAT = null;
+const dec = c => c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4), encd = c => c <= 0.0031308 ? 12.92 * c : 1.055 * Math.pow(c, 1 / 2.4) - 0.055;
+function simHex(h) {
+  const v = [1, 3, 5].map(i => dec(parseInt(h.slice(i, i + 2), 16) / 255));
+  const o = MAT.map(r => r[0] * v[0] + r[1] * v[1] + r[2] * v[2]);
+  return "#" + o.map(c => Math.round(255 * encd(Math.min(1, Math.max(0, c)))).toString(16).padStart(2, "0")).join("");
+}
+const cls = (v, g, o) => v >= g ? "good" : v >= o ? "ok" : "bad";
+function metricsHTML(S) {
+  const s = S.score, t = S.term_score;
+  const m = (val, label, g, o, fmt) => `<div class="m"><b class="${val == null ? "" : cls(val, g, o)}">${val == null ? "–" : fmt ? fmt(val) : val}</b><span>${label}</span></div>`;
+  return `<div class="metrics">`
+    + m(Math.round(s.syntax_kept * 100), `syntax distinctions retained (${s.syntax_lost} of ${s.syntax_pairs} lost)`, 95, 85, v => v + "%")
+    + m(s.core_min, `closest core pair${s.core_worst ? ": " + s.core_worst.join(" ≈ ") : ""}`, 12, 8)
+    + m(s.errwarn, "error vs warning", 20, 12) + m(s.add_del, "git added vs deleted", 20, 12)
+    + m(t ? t.minN : null, `terminal: worst ANSI pair${t ? " (" + t.worst + ")" : ""}`, 12, 8)
+    + m(s.fgbg, "text contrast (lower = softer)", 0, 0, v => v + ":1") + `</div>`;
+}
+function legendHTML(S) {
+  const r = S.roles || S.score_roles || {};
+  return `<div class="legend">` + Object.keys(r).filter(k => r[k] && k !== "bg").map(k =>
+    `<div class="chip"><i style="background:${r[k]}"></i><i style="background:${simHex(r[k])}" title="simulated colour"></i>${esc(ROLE_LABEL[k] || k)}</div>`).join("") + `</div>`
+    + `<p class="muted" style="font-size:12px;margin:6px 0 0">Each role has two swatches: original colour on the left, simulated colour on the right. Swatches remain unfiltered to avoid applying the model twice.</p>`;
+}
+
+// ---------------- ratings / local storage ----------------
+let storageAvailable = true;
+function readRatings() {
+  const result = Object.create(null);
+  try {
+    const stored = JSON.parse(localStorage.getItem("cbRatings") || "{}");
+    if (stored && typeof stored === "object") {
+      for (const [id, value] of Object.entries(stored)) {
+        if (!value || typeof value !== "object") continue;
+        result[id] = { stars: Number.isInteger(value.stars) ? Math.max(0, Math.min(5, value.stars)) : 0,
+          fav: Boolean(value.fav), note: typeof value.note === "string" ? value.note : "" };
+      }
+    }
+  } catch (_) { storageAvailable = false; }
+  return result;
+}
+const ratings = readRatings();
+function updateRated() {
+  const n = Object.values(ratings).filter(r => r.stars || r.fav).length;
+  document.getElementById("ratedc").textContent = (n ? `${n} rated` : "")
+    + (storageAvailable ? "" : " · Local storage unavailable; export picks to retain ratings.");
+}
+function saveLocal() {
+  try { localStorage.setItem("cbRatings", JSON.stringify(ratings)); }
+  catch (_) { storageAvailable = false; }
+  updateRated();
+}
+
+// ---------------- app state / filters ----------------
+let DATA = null, state = { mode: "grid", filter: "scheme", lang: "lua", sel: null, cmp: "", sim: false };
+const KIND_LABEL = { scheme: "Scheme", comparison: "Comparison theme" };
+function filtered() {
+  const schemes = DATA.schemes;
+  if (state.filter === "all") return schemes;
+  if (state.filter === "light") return schemes.filter(s => s.variant === "light");
+  if (state.filter === "picked") return schemes.filter(s => ratings[s.id] && (ratings[s.id].fav || ratings[s.id].stars));
+  return schemes.filter(s => s.kind === state.filter);
+}
+function renderList() {
+  const groups = new Map();
+  for (const s of filtered()) {
+    const group = s.kind === "scheme" ? `Schemes · ${s.family}` : "Comparison themes";
+    if (!groups.has(group)) groups.set(group, []);
+    groups.get(group).push(s);
+  }
+  let h = "";
+  for (const [group, schemes] of groups) {
+    h += `<div class="grp">${esc(group)}</div>`;
+    for (const s of schemes) {
+      const r = s.score_roles || {}, rt = ratings[s.id] || {};
+      h += `<div class="item ${state.sel === s.id ? "sel" : ""}" data-id="${esc(s.id)}"><span class="nm">${esc(s.name)}${s.variant === "light" ? " ☀" : ""}${rt.fav ? " ♥" : ""}</span>`
+        + `<span class="sc">${Math.round(s.score.syntax_kept * 100)}% · ${s.score.core_min}</span>`
+        + `<div class="sw">${["bg", "text", "comment", "keyword", "function", "string", "type", "constant", "err", "warn", "add", "delete"].map(k => `<span style="background:${r[k] || base(s).bg}"></span>`).join("")}`
+        + `${rt.stars ? `<span class="stars">${"★".repeat(rt.stars)}</span>` : ""}</div></div>`;
+    }
+  }
+  const L = document.getElementById("list"); L.innerHTML = h;
+  L.querySelectorAll(".item").forEach(e => e.onclick = () => { state.sel = e.dataset.id; state.mode = "detail"; syncSeg(); render(); });
+}
+function rateHTML(id) {
+  const r = ratings[id] || {};
+  return `<span class="rate" data-id="${esc(id)}">${[1, 2, 3, 4, 5].map(i => `<button data-s="${i}" class="${(r.stars || 0) >= i ? "on" : ""}" title="Rate ${i} stars">★</button>`).join("")}`
+    + `<button data-fav="1" class="fav ${r.fav ? "on" : ""}" title="Mark pick">♥</button></span>`;
+}
+function bindRate(root) {
+  root.querySelectorAll(".rate button").forEach(b => b.onclick = ev => {
+    ev.stopPropagation();
+    const id = b.parentElement.dataset.id, r = ratings[id] = ratings[id] || {};
+    if (b.dataset.fav) r.fav = !r.fav; else r.stars = r.stars === +b.dataset.s ? 0 : +b.dataset.s;
+    saveLocal(); render();
+  });
+}
+function render() {
+  renderList();
+  const V = document.getElementById("view");
+  const simStyle = state.sim ? "filter:url(#sim)" : "";
+  if (!filtered().length) { V.innerHTML = `<p class="help">No schemes match this filter.</p>`; return; }
+  if (state.mode === "grid") {
+    V.innerHTML = `<p class="help">Overview of the <b>${filtered().length}</b> schemes in this filter. Click a card to open the full editor view (diagnostics, git signs, completion menu, diff and terminal). Rate with ★ or mark picks with ♥.
+      Scores measure colour separation under the ${esc(DATA.model.type)} model (severity ${DATA.model.severity}): blue = good, yellow = fair, orange = weak.</p>`
+      + `<div class="grid" style="${simStyle}">` + filtered().map(s => `<div class="gcard card" data-id="${esc(s.id)}"><div class="hd"><span><b>${esc(s.name)}</b> <span class="badge ${s.kind}">${KIND_LABEL[s.kind]}</span></span>${rateHTML(s.id)}</div>`
+      + renderEditor(s, state.lang, { compact: true, lines: 18 })
+      + `<div class="muted" style="font-size:12px;margin-top:6px">kept <b class="${cls(s.score.syntax_kept * 100, 95, 85)}">${Math.round(s.score.syntax_kept * 100)}%</b> · closest <b class="${cls(s.score.core_min, 12, 8)}">${s.score.core_min}</b>${s.score.core_worst ? " (" + s.score.core_worst.join("≈") + ")" : ""} · err/warn <b class="${cls(s.score.errwarn || 0, 20, 12)}">${s.score.errwarn}</b> · add/del <b class="${cls(s.score.add_del || 0, 20, 12)}">${s.score.add_del}</b> · contrast ${s.score.fgbg}</div></div>`).join("") + `</div>`;
+    V.querySelectorAll(".gcard").forEach(e => e.onclick = () => { state.sel = e.dataset.id; state.mode = "detail"; syncSeg(); render(); });
+    bindRate(V); return;
+  }
+  const S = filtered().find(s => s.id === state.sel) || filtered()[0]; state.sel = S.id;
+  const C = state.cmp ? DATA.schemes.find(s => s.id === state.cmp) : null;
+  const r = ratings[S.id] || {};
+  const opts = DATA.schemes.map(s => `<option value="${esc(s.id)}" ${s.id === state.cmp ? "selected" : ""}>${esc(s.name)}</option>`).join("");
+  V.innerHTML = `<div class="card"><div class="title"><h2>${esc(S.name)}</h2><span class="badge ${S.kind}">${esc(S.group)}</span>${rateHTML(S.id)}
+      <span class="muted" style="margin-left:auto">Compare with <select id="cmp"><option value="">none</option>${opts}</select></span></div>
+      <p style="margin:6px 0 0">${esc(S.description)}</p><p class="muted">${S.tags.map(esc).join(" · ")}</p>${metricsHTML(S)}
+      ${S.score.lost_pairs && S.score.lost_pairs.length ? `<p class="lost">Pairs below the separation threshold (simulated CIEDE2000 distance): ${S.score.lost_pairs.join(", ")}</p>` : `<p class="good" style="font-size:12.5px">No intended syntax distinctions are lost under this model.</p>`}
+      ${S.terminal_inferred ? `<p class="muted">Missing terminal colours inferred from editor roles.</p>` : ""}
+      <textarea id="note" rows="2" style="width:100%;margin-top:6px" placeholder="Scheme notes (saved with picks)">${esc(r.note || "")}</textarea></div>
+    <div style="${simStyle}">
+      <div class="panes ${C ? "two" : ""}">
+        <div><h3>Editor: ${SAMPLES[state.lang].name}</h3>${renderEditor(S, state.lang)}</div>
+        ${C ? `<div><h3>${esc(C.name)}</h3>${renderEditor(C, state.lang)}</div>` : ""}
+      </div>
+      <div class="panes ${C ? "two" : ""}" style="margin-top:14px">
+        <div><h3>Inline diff (diffview / gitsigns preview)</h3>${renderDiff(S)}<h3 style="margin-top:14px">Terminal (ANSI colours)</h3>${renderTerm(S)}</div>
+        ${C ? `<div><h3>&nbsp;</h3>${renderDiff(C)}<h3 style="margin-top:14px">&nbsp;</h3>${renderTerm(C)}</div>` : ""}
+      </div>
+    </div>
+    <div class="card" style="margin-top:14px"><h3>Roles</h3>${legendHTML(S)}</div>`;
+  bindRate(V);
+  document.getElementById("cmp").onchange = e => { state.cmp = e.target.value; render(); };
+  document.getElementById("note").onchange = e => { (ratings[S.id] = ratings[S.id] || {}).note = e.target.value; saveLocal(); };
+}
+function syncSeg() {
+  for (const [id, key] of [["mode", "mode"], ["filter", "filter"], ["lang", "lang"]])
+    document.querySelectorAll(`#${id} button`).forEach(b => b.classList.toggle("on", b.dataset.v === state[key]));
+}
+for (const [id, key] of [["mode", "mode"], ["filter", "filter"], ["lang", "lang"]])
+  document.querySelectorAll(`#${id} button`).forEach(b => b.onclick = () => { state[key] = b.dataset.v; syncSeg(); render(); });
+document.getElementById("simt").onchange = e => { state.sim = e.target.checked; render(); };
+
+// ---------------- export picks (API when available, download offline) ----------------
+function downloadPicks(text) {
+  const url = URL.createObjectURL(new Blob([text], { type: "application/json" }));
+  const link = document.createElement("a");
+  link.href = url; link.download = "gallery-picks.json";
+  document.body.append(link); link.click(); link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+document.getElementById("save").onclick = async () => {
+  const payload = JSON.stringify({ kind: "gallery-picks", date: new Date().toISOString(), ratings }, null, 2);
+  if (location.protocol === "http:" || location.protocol === "https:") {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 2000);
+    try {
+      const response = await fetch("/api/results", { method: "POST", signal: controller.signal,
+        headers: { "Content-Type": "application/json" }, body: payload });
+      if (!response.ok) throw new Error("Results endpoint unavailable");
+      const result = await response.json();
+      alert("Picks saved" + (result.saved ? ": " + result.saved : "."));
+      return;
+    } catch (_) { /* Static hosting has no results API; use the offline export. */ }
+    finally { clearTimeout(timeout); }
+  }
+  downloadPicks(payload);
+};
+
+// ---------------- initial data / URL state / SVG simulation ----------------
+const qs = new URLSearchParams(location.search);
+for (const [key, allowed] of Object.entries({ mode: ["grid", "detail"],
+  filter: ["scheme", "comparison", "picked", "light", "all"], lang: Object.keys(SAMPLES) })) {
+  if (allowed.includes(qs.get(key))) state[key] = qs.get(key);
+}
+for (const key of ["sel", "cmp"]) if (qs.get(key)) state[key] = qs.get(key);
+state.sim = qs.has("sim") && qs.get("sim") !== "0";
+DATA = window.GALLERY_DATA;
+if (!DATA) throw new Error("Missing gallery_data.js; keep it next to index.html.");
+MAT = DATA.model.matrix;
+document.getElementById("simlabel").textContent = `Simulate ${DATA.model.type} vision (severity ${DATA.model.severity})`;
+syncSeg(); document.getElementById("simt").checked = state.sim;
+document.getElementById("simm").setAttribute("values", MAT.map(r => r.join(" ") + " 0 0").join(" ") + " 0 0 0 1 0");
+updateRated(); render();
+</script>
+</body>
+</html>

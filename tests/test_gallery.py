@@ -1,4 +1,4 @@
-"""Offline gallery: payloads, legacy dumps, CLI, packaged UI and browser smoke tests."""
+"""Offline gallery: payloads, comparison dumps, CLI, packaged UI and browser smoke tests."""
 from __future__ import annotations
 
 import contextlib

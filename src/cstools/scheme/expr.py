@@ -5,7 +5,7 @@ A colour value is a ``"#rrggbb"`` literal (palette only), a name (``"bg"``), a r
 
     {"mix": [a, b, t]}  {"lighten": [c, dL]}  {"darken": [c, dL]}  {"raise": [c, dL]}  {"chroma": [c, C]}
 
-Every operation rounds to hex, so nested expressions reproduce step-by-step legacy results.
+Every operation rounds to hex, so nested expressions reproduce the step-by-step schema v1 reference results.
 """
 from __future__ import annotations
 

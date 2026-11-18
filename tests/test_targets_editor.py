@@ -13,14 +13,14 @@ import unittest
 
 from cstools.highlights.groups import CORE_SECTIONS, build_groups, plugin_sections
 from cstools.score.editor import roles_of
-from cstools.scheme.assemble import ACCENT_KEYS, assemble_scheme
+from cstools.scheme.assemble import assemble_scheme
 from cstools.scheme.model import ANSI_NAMES, Scheme
 from cstools.targets import REGISTRY, RenderContext
 from cstools.targets.lualine import MODE_ROLES, mode_roles
 from cstools.targets.neovim import lua_value
 from cstools.vision.cvd import de_seen
 from cstools.vision.model import DEFAULT
-from support import SCHEME_IDS, legacy, migrated, write_repo
+from support import SCHEME_IDS, migrated, reference, write_repo
 
 CTX = RenderContext(project_name="demo", lua_module="demo")
 EDITOR_TARGETS = ("vim", "neovim", "lualine")
@@ -35,20 +35,15 @@ SELECTED = (
 
 
 def editor_schemes() -> list[Scheme]:
-    """Migrated dark fixtures and the four light variants from the behavioural reference."""
+    """Migrated dark fixtures and the four light variants from the frozen reference styles."""
     schemes = [migrated(sid) for sid in SCHEME_IDS]
-    gen = legacy("gen_schemes")
-    accents = dict(zip(ACCENT_KEYS, ("K", "F", "S", "T", "C", "P", "err", "warn", "info", "hint", "add", "change", "delete")))
-    for style in gen.STYLES:
-        if not style.get("light"):
+    for style in reference("styles"):
+        if style["variant"] != "light":
             continue
-        terminal = gen.terminal_for(style, style["a"])
+        terminal = style["terminal"]
         schemes.append(assemble_scheme(
-            {"id": style["id"], "name": style["name"], "variant": "light"},
-            {"bg": style["bg"], "bg_alt": style["alt"], "fg": style["fg"], "fg_dim": style["dim"], "comment": style["comment"]},
-            {key: style["a"][value] for key, value in accents.items()},
-            {f"{key}_italic": value for key, value in style["italic"].items()},
-            dict(zip(ANSI_NAMES, terminal[:8])), dict(zip(ANSI_NAMES, terminal[8:]))))
+            {"id": style["id"], "name": style["name"], "variant": "light"}, style["base"], style["accents"],
+            style["styles"], dict(zip(ANSI_NAMES, terminal[:8])), dict(zip(ANSI_NAMES, terminal[8:]))))
     return schemes
 
 

@@ -374,7 +374,7 @@ function lex(src, lang) {
 }
 
 // ---------------- highlight resolution ----------------
-const LEGACY = { "@keyword": "Keyword", "@function": "Function", "@string": "String", "@type": "Type", "@constant": "Constant", "@number": "Number",
+const CLASSIC_GROUPS = { "@keyword": "Keyword", "@function": "Function", "@string": "String", "@type": "Type", "@constant": "Constant", "@number": "Number",
   "@boolean": "Boolean", "@comment": "Comment", "@operator": "Operator", "@punctuation": "Delimiter", "@variable": "Identifier", "@property": "Identifier",
   "@module": "Identifier", "@attribute": "PreProc", "@constructor": "Type", "@character": "String", "@label": "Statement" };
 function hl(S, name) {
@@ -385,7 +385,7 @@ function hl(S, name) {
     const k = n.lastIndexOf("."); if (k < 0) break; n = n.slice(0, k);
   }
   const root = "@" + name.slice(1).split(".")[0];
-  if (name.startsWith("@") && LEGACY[root] && S.groups[LEGACY[root]]) return S.groups[LEGACY[root]];
+  if (name.startsWith("@") && CLASSIC_GROUPS[root] && S.groups[CLASSIC_GROUPS[root]]) return S.groups[CLASSIC_GROUPS[root]];
   return {};
 }
 function base(S) { const N = S.groups.Normal; return { fg: N.fg, bg: N.bg }; }

@@ -1,4 +1,4 @@
-"""Migration regression (v1 → v2) and assemble_scheme / build_groups parity with legacy gen_schemes."""
+"""Migration regression (v1 → v2) and assemble_scheme / build_groups parity with the frozen reference styles."""
 import unittest
 
 from cstools.highlights import groups as groups_module
@@ -7,10 +7,7 @@ from cstools.scheme.assemble import ACCENT_KEYS, assemble_scheme
 from cstools.scheme.expr import SchemeError
 from cstools.scheme.migrate import migrate_v1, read_recipe_metadata
 from cstools.scheme.model import ANSI_NAMES, TERMINAL_KEYS
-from support import SCHEME_IDS, legacy, migrated, recipe_path, v1, v1_highlights
-
-LEGACY_ACCENTS = dict(zip(ACCENT_KEYS, ("K", "F", "S", "T", "C", "P", "err", "warn", "info", "hint", "add", "change",
-                                        "delete")))
+from support import SCHEME_IDS, migrated, recipe_path, reference, v1, v1_highlights
 
 
 class MigrationRegressionTest(unittest.TestCase):
@@ -72,24 +69,23 @@ class MigrationRegressionTest(unittest.TestCase):
             migrate_v1({"schema_version": 2})
 
 
-class LegacyTemplateParityTest(unittest.TestCase):
-    """build_groups(assemble_scheme(style)) must equal legacy gen_schemes.groups_for for every legacy style."""
+class ReferenceTemplateParityTest(unittest.TestCase):
+    """build_groups(assemble_scheme(style)) must equal the frozen reference groups for every reference style."""
 
-    def test_all_legacy_styles_dark_and_light(self) -> None:
-        gen = legacy("gen_schemes")
-        for st in gen.STYLES:
+    def test_all_reference_styles_dark_and_light(self) -> None:
+        styles_ref = reference("styles")
+        self.assertEqual(len(styles_ref), 13)
+        self.assertEqual({st["variant"] for st in styles_ref}, {"dark", "light"})
+        for st in styles_ref:
             with self.subTest(st["id"]):
-                acc = {k: st["a"][LEGACY_ACCENTS[k]] for k in ACCENT_KEYS}
-                term = gen.terminal_for(st, st["a"])
-                meta = {"id": st["id"], "name": st["name"], "variant": "light" if st.get("light") else "dark"}
-                base = {"bg": st["bg"], "bg_alt": st["alt"], "fg": st["fg"], "fg_dim": st["dim"],
-                        "comment": st["comment"]}
-                styles = {f"{k}_italic": v for k, v in st["italic"].items()}
-                scheme = assemble_scheme(meta, base, acc, styles, dict(zip(ANSI_NAMES, term[:8])),
-                                         dict(zip(ANSI_NAMES, term[8:])))
-                # legacy passes input hex through unchanged (one style uses upper case); cstools lowercases
+                self.assertEqual(tuple(st["accents"]), ACCENT_KEYS)
+                term = st["terminal"]
+                meta = {"id": st["id"], "name": st["name"], "variant": st["variant"]}
+                scheme = assemble_scheme(meta, st["base"], st["accents"], st["styles"],
+                                         dict(zip(ANSI_NAMES, term[:8])), dict(zip(ANSI_NAMES, term[8:])))
+                # the reference passes input hex through unchanged (one style uses upper case); cstools lowercases
                 want = {g: {k: v.lower() if isinstance(v, str) else v for k, v in e.items() if v}
-                        for g, e in gen.groups_for(st, st["a"]).items()}
+                        for g, e in st["groups"].items()}
                 got = {g: s.to_dict() for section in CORE_SECTIONS for g, s in section(scheme).items()}
                 self.assertEqual(got, want)
                 self.assertEqual([scheme.ansi(i) for i in range(16)], [h.lower() for h in term])

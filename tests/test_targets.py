@@ -1,4 +1,4 @@
-"""Targets: registry, header, and alacritty/kitty golden equality with the legacy exporter output."""
+"""Targets: registry, header, and alacritty/kitty golden equality with the frozen reference exporter output."""
 import tomllib
 import unittest
 

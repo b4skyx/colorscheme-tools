@@ -65,8 +65,8 @@ come from `scheme/defaults.py`. The JSON Schema is in [`schema/colorscheme.schem
 PYTHONPATH=src python3 -m unittest discover -s tests
 ```
 Tests that need external binaries (nvim, tmux, fzf, git, delta, eza, fish, lazygit, firefox) skip when the
-binary is missing. Tests never write to the user's configuration or caches. `legacy/` holds the original
-prototype scripts as a behavioural reference; they are not imported by the package.
+binary is missing. Tests never write to the user's configuration or caches. Parity tests compare against
+frozen reference outputs of the original prototype in `tests/fixtures/parity/`.
 
 ## License
 MIT

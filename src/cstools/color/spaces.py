@@ -1,7 +1,7 @@
 """Colour-space conversions: hex, sRGB, linear RGB, XYZ, CIELAB, CIELUV, OKLab and OKLCH.
 
 Numerics and hex rounding follow the original prototype exactly, so ported schemes
-reproduce their legacy output byte-for-byte.
+reproduce their schema v1 reference output byte-for-byte.
 """
 from __future__ import annotations
 

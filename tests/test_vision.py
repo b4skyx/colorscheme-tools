@@ -3,17 +3,19 @@ import unittest
 
 from cstools.vision import cvd
 from cstools.vision.model import DEFAULT, VisionModel
-from support import legacy
+from support import reference
 
 
 class VisionTest(unittest.TestCase):
-    def test_cvd_matrix_matches_legacy(self) -> None:
-        old = legacy("cvd")
-        for kwargs in ({"deutan": 1.0}, {"protan": 0.6}, {"protan": 0.3, "deutan": 0.8},
-                       {"protan": 0.5, "deutan": 0.9, "mix": 0.25}):
-            self.assertEqual(cvd.cvd_matrix(**kwargs), old.cvd_matrix(**kwargs))
-        self.assertEqual(cvd.de_seen("#a47c63", "#f4da9b", cvd.cvd_matrix(deutan=1.0)),
-                         old.de_seen("#a47c63", "#f4da9b", old.cvd_matrix(deutan=1.0)))
+    def test_cvd_matrix_matches_reference(self) -> None:
+        ref = reference("vision")
+        self.assertEqual([case["kwargs"] for case in ref["cvd_matrix"]],
+                         [{"deutan": 1.0}, {"protan": 0.6}, {"protan": 0.3, "deutan": 0.8},
+                          {"protan": 0.5, "deutan": 0.9, "mix": 0.25}])
+        for case in ref["cvd_matrix"]:
+            self.assertEqual(cvd.cvd_matrix(**case["kwargs"]), case["matrix"])
+        seen = ref["de_seen"]
+        self.assertEqual(cvd.de_seen(seen["a"], seen["b"], cvd.cvd_matrix(deutan=seen["deutan"])), seen["value"])
 
     def test_vision_model(self) -> None:
         self.assertEqual(DEFAULT, VisionModel("deutan", 1.0))

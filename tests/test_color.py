@@ -1,58 +1,51 @@
-"""cstools.color: numeric parity with legacy/cvd.py."""
-import random
+"""cstools.color: numeric parity with the frozen reference outputs in fixtures/parity/color.json."""
 import unittest
 
 from cstools.color import contrast, difference, ops, spaces
-from support import legacy
-
-
-def sample_hexes(n: int = 300, seed: int = 3) -> list[str]:
-    rnd = random.Random(seed)
-    fixed = ["#000000", "#ffffff", "#808080", "#ff0000", "#00ff00", "#0000ff", "#2d2f33", "#c0bdb5"]
-    return fixed + ["#%06x" % rnd.randrange(0x1000000) for _ in range(n)]
+from support import reference
 
 
 class ColorParityTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
-        cls.cvd = legacy("cvd")
-        cls.hexes = sample_hexes()
+        cls.ref = reference("color")
 
-    def test_conversions_match_legacy(self) -> None:
-        for h in self.hexes:
+    def test_conversions_match_reference(self) -> None:
+        self.assertEqual(len(self.ref["hexes"]), 308)
+        for h, want in zip(self.ref["hexes"], self.ref["conversions"], strict=True):
             lin = spaces.hex_to_linear(h)
-            self.assertEqual(lin, self.cvd.hex2lin(h))
+            self.assertEqual(lin, want["linear"])
             self.assertEqual(spaces.linear_to_hex(lin), h)
-            self.assertEqual(spaces.linear_to_lab(lin), self.cvd.lin2lab(lin))
-            self.assertEqual(spaces.linear_to_luv(lin), self.cvd.lin2luv(lin))
-            self.assertEqual(spaces.linear_to_oklab(lin), self.cvd.lin2oklab(lin))
-            self.assertEqual(spaces.hex_to_oklch(h), self.cvd.hex2oklch(h))
-            self.assertEqual(spaces.lab_to_linear(*spaces.linear_to_lab(lin)),
-                             self.cvd.lab2lin(*self.cvd.lin2lab(lin)))
+            self.assertEqual(spaces.linear_to_lab(lin), tuple(want["lab"]))
+            self.assertEqual(spaces.linear_to_luv(lin), tuple(want["luv"]))
+            self.assertEqual(spaces.linear_to_oklab(lin), tuple(want["oklab"]))
+            self.assertEqual(spaces.hex_to_oklch(h), tuple(want["oklch"]))
+            self.assertEqual(spaces.lab_to_linear(*spaces.linear_to_lab(lin)), want["lab_to_linear"])
 
-    def test_oklch_to_hex_matches_legacy(self) -> None:
-        rnd = random.Random(5)
-        for _ in range(300):
-            L, C, h = rnd.uniform(0, 1), rnd.uniform(0, 0.35), rnd.uniform(0, 360)
-            self.assertEqual(spaces.oklch_to_hex(L, C, h), self.cvd.oklch2hex(L, C, h))
-            self.assertEqual(spaces.oklch_to_hex(L, C, h, gamut_map=False), self.cvd.oklch2hex(L, C, h, False))
+    def test_oklch_to_hex_matches_reference(self) -> None:
+        self.assertEqual(len(self.ref["oklch_to_hex"]), 300)
+        for L, C, h, mapped, unmapped in self.ref["oklch_to_hex"]:
+            self.assertEqual(spaces.oklch_to_hex(L, C, h), mapped)
+            self.assertEqual(spaces.oklch_to_hex(L, C, h, gamut_map=False), unmapped)
 
-    def test_ops_match_legacy(self) -> None:
-        rnd = random.Random(9)
-        for a, b in zip(self.hexes, reversed(self.hexes)):
-            t, dL = rnd.uniform(0, 1), rnd.uniform(-0.2, 0.2)
-            self.assertEqual(ops.mix(a, b, t), self.cvd.mix_hex(a, b, t))
-            self.assertEqual(ops.shift_lightness(a, dL), self.cvd.shift_l(a, dL))
-            self.assertEqual(ops.lighten(a, 0.06), self.cvd.shift_l(a, 0.06))
-            self.assertEqual(ops.darken(a, 0.06), self.cvd.shift_l(a, -0.06))
-            self.assertEqual(ops.raise_(a, 0.1, light=False), self.cvd.shift_l(a, 0.1))
-            self.assertEqual(ops.raise_(a, 0.1, light=True), self.cvd.shift_l(a, -0.1))
+    def test_ops_match_reference(self) -> None:
+        self.assertEqual(len(self.ref["ops"]), 308)
+        for case in self.ref["ops"]:
+            a, b = case["a"], case["b"]
+            self.assertEqual(ops.mix(a, b, case["t"]), case["mix"])
+            self.assertEqual(ops.shift_lightness(a, case["dL"]), case["shift"])
+            self.assertEqual(ops.lighten(a, 0.06), case["plus_06"])
+            self.assertEqual(ops.darken(a, 0.06), case["minus_06"])
+            self.assertEqual(ops.raise_(a, 0.1, light=False), case["plus_10"])
+            self.assertEqual(ops.raise_(a, 0.1, light=True), case["minus_10"])
 
-    def test_difference_and_contrast_match_legacy(self) -> None:
-        for a, b in zip(self.hexes, self.hexes[1:]):
+    def test_difference_and_contrast_match_reference(self) -> None:
+        self.assertEqual(len(self.ref["pairs"]), 307)
+        for case in self.ref["pairs"]:
+            a, b = case["a"], case["b"]
             la, lb = spaces.hex_to_lab(a), spaces.hex_to_lab(b)
-            self.assertEqual(difference.ciede2000(la, lb), self.cvd.ciede2000(la, lb))
-            self.assertEqual(contrast.wcag_contrast(a, b), self.cvd.contrast(a, b))
+            self.assertEqual(difference.ciede2000(la, lb), case["ciede2000"])
+            self.assertEqual(contrast.wcag_contrast(a, b), case["contrast"])
 
     def test_with_chroma_sets_chroma(self) -> None:
         out = ops.with_chroma("#7b81b9", 0.0)

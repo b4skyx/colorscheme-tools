@@ -1,12 +1,9 @@
-"""Shared test helpers: fixture paths, migrated fixtures and by-path access to legacy scripts (parity only)."""
+"""Shared test helpers: fixture paths, migrated fixtures and frozen reference outputs (parity only)."""
 from __future__ import annotations
 
-import importlib
 import json
-import sys
 from functools import cache
 from pathlib import Path
-from types import ModuleType
 from typing import Any
 
 from cstools.scheme.migrate import migrate_v1, read_recipe_metadata
@@ -14,15 +11,12 @@ from cstools.scheme.model import Scheme
 
 ROOT = Path(__file__).resolve().parent.parent
 FIXTURES = ROOT / "tests" / "fixtures"
-LEGACY = ROOT / "legacy"
 SCHEME_IDS = ("haze", "fog", "abyss", "dusk")
 
 
-def legacy(name: str) -> ModuleType:
-    """Import ``legacy/<name>.py`` by path (the legacy scripts import each other by bare name)."""
-    if str(LEGACY) not in sys.path:
-        sys.path.insert(0, str(LEGACY))
-    return importlib.import_module(name)
+def reference(name: str) -> Any:
+    """Fresh parse of ``fixtures/parity/<name>.json``: frozen outputs of the original prototype scripts."""
+    return json.loads((FIXTURES / "parity" / f"{name}.json").read_text(encoding="utf-8"))
 
 
 def v1(sid: str) -> dict[str, Any]:

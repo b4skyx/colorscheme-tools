@@ -1,4 +1,4 @@
-"""ANSI optimiser (port of ``legacy/export_schemes.py``), variant-aware.
+"""ANSI optimiser (port of the original prototype exporter), variant-aware.
 
 The six accent slots (red … cyan) and their bright versions start from the scheme colours whose hue is
 closest to each slot (red = error and yellow = warning stay semantic) and are searched so that, for the
@@ -39,7 +39,7 @@ BRIGHT_STEP = 0.03
 #: Post-search repair of the bright step: OKLCH L increment and maximum total shift.
 REPAIR_STEP = 0.001
 REPAIR_LIMIT = 0.05
-#: Hard lightness clamps of the search on dark variants (legacy constants).
+#: Hard lightness clamps of the search on dark variants (prototype constants).
 DARK_L_CLAMP = (0.45, 0.93)
 #: Light variants clamp to the recipe window widened by these margins (below, above).
 LIGHT_L_MARGINS = (0.11, 0.13)

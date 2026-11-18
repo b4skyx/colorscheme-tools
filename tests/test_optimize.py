@@ -1,4 +1,4 @@
-"""Optimiser tests: recipe parsing, search, legacy parity (small budgets), light-variant rules, CLI."""
+"""Optimiser tests: recipe parsing, search, reference parity (small budgets), light-variant rules, CLI."""
 import contextlib
 import io as stdio
 import random
@@ -19,10 +19,7 @@ from cstools.scheme import io
 from cstools.scheme.assemble import ACCENT_KEYS, assemble_scheme
 from cstools.scheme.model import ANSI_NAMES, UI_ROLES
 from cstools.scheme.validate import validate
-from support import SCHEME_IDS, legacy, migrated, recipe_path, v1
-
-#: Legacy single-letter accent keys in ``ACCENT_KEYS`` order.
-LEGACY_KEYS = ("K", "F", "S", "T", "C", "P", "err", "warn", "info", "hint", "add", "change", "delete")
+from support import SCHEME_IDS, migrated, recipe_path, reference, v1
 
 LIGHT_RECIPE = """
 schema_version = 1
@@ -84,14 +81,6 @@ terminal_iterations = 6000
 
 def light_recipe() -> Recipe:
     return recipe_from_dict(tomllib.loads(LIGHT_RECIPE))
-
-
-def legacy_style(recipe: Recipe) -> dict:
-    """The recipe as a legacy ``gen_schemes`` style dict."""
-    b, e = recipe.base, recipe.editor
-    return dict(bg=b["bg"], alt=b["bg_alt"], fg=b["fg"], comment=b["comment"], dim=b["fg_dim"], cmin=e.contrast_min,
-                cmax=e.chroma_max, tol=e.hue_tolerance, lmin=e.lightness_min, lmax=e.lightness_max,
-                a={lk: e.anchors[k] for lk, k in zip(LEGACY_KEYS, ACCENT_KEYS)})
 
 
 class RecipeTest(unittest.TestCase):
@@ -169,44 +158,45 @@ class SearchTest(unittest.TestCase):
             search(self.START, self.objective, lambda _k: Bounds(0, 1, 0, 1), 1, restarts=0)
 
 
-class LegacyParityTest(unittest.TestCase):
-    """The ports consume random numbers exactly like the legacy scripts (small budgets keep this fast)."""
+class ReferenceParityTest(unittest.TestCase):
+    """The ports consume random numbers exactly like the original prototype (frozen in parity/optimize.json)."""
 
-    def test_editor_matches_gen_schemes(self) -> None:
-        gen = legacy("gen_schemes")
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.ref = reference("optimize")
+
+    def test_editor_matches_reference(self) -> None:
+        ref = self.ref["editor"]
+        self.assertEqual(list(ref), ["haze", "dusk", "light"])
         for sid in ("haze", "dusk"):
-            r = load_recipe(recipe_path(sid)).with_budget(iterations=60)
-            want = gen.optimise(legacy_style(r), iters=60, restarts=3, seed=1)
-            self.assertEqual(optimize_editor(r), {k: want[lk] for lk, k in zip(LEGACY_KEYS, ACCENT_KEYS)}, sid)
-        r = light_recipe().with_budget(iterations=40)
-        want = gen.optimise(legacy_style(r), iters=40, restarts=3, seed=1)
-        self.assertEqual(optimize_editor(r), {k: want[lk] for lk, k in zip(LEGACY_KEYS, ACCENT_KEYS)})
+            r = load_recipe(recipe_path(sid)).with_budget(iterations=ref[sid]["iterations"])
+            self.assertEqual(r.optimizer.iterations, 60)
+            self.assertEqual(optimize_editor(r), ref[sid]["accents"], sid)
+        r = light_recipe().with_budget(iterations=ref["light"]["iterations"])
+        self.assertEqual(r.optimizer.iterations, 40)
+        self.assertEqual(optimize_editor(r), ref["light"]["accents"])
 
-    def test_evaluate_matches_gen_schemes(self) -> None:
-        gen = legacy("gen_schemes")
-        r = load_recipe(recipe_path("fog"))
-        mine = evaluate_editor(r, r.editor.anchors, gen.M)
-        theirs = gen.evaluate(legacy_style(r), legacy_style(r)["a"])
-        self.assertEqual(mine[0], theirs[0])
-        self.assertEqual(mine[1], theirs[1])
+    def test_evaluate_matches_reference(self) -> None:
+        ref = self.ref["evaluate"]
+        r = load_recipe(recipe_path(ref["scheme"]))
+        mine = evaluate_editor(r, r.editor.anchors, ref["matrix"])
+        self.assertEqual(mine[0], ref["value"][0])
+        self.assertEqual(mine[1], ref["value"][1])
 
-    def test_terminal_matches_export_schemes(self) -> None:
-        exp = legacy("export_schemes")
+    def test_terminal_matches_reference(self) -> None:
+        self.assertEqual(list(self.ref["terminal"]), list(SCHEME_IDS))
         for sid in SCHEME_IDS:
-            r = load_recipe(recipe_path(sid)).with_budget(iterations=150)
+            want = self.ref["terminal"][sid]
+            r = load_recipe(recipe_path(sid)).with_budget(iterations=want["iterations"])
+            self.assertEqual((r.optimizer.terminal_iterations, r.optimizer.terminal_seed), (150, 7))
             accents = {k: v1(sid)["palette"][k]["hex"] for k in ACCENT_KEYS}
-            legacy_accents = {lk: accents[k] for lk, k in zip(LEGACY_KEYS, ACCENT_KEYS)}
-            t = r.terminal
-            n, b, metrics = exp.optimise_terminal({"accents": legacy_accents, "base": {"fg": r.base["fg"],
-                                                                                    "bg": r.base["bg"]}},
-                                                  t.contrast_min, t.chroma_max, t.lightness_min, t.lightness_max,
-                                                  iters=150, seed=7)
+            n, b, metrics = want["normal"], want["bright"], want["metrics"]
             mine = optimize_terminal(r, accents)
             repaired, repairs = repair_bright_step(n, b, light=False)
             self.assertEqual((mine.normal, mine.bright, mine.repairs), (n, repaired, repairs), sid)
             if not repairs:
                 self.assertEqual(mine.metrics, metrics, sid)
-            self.assertEqual(anchors_for(accents), exp.anchors_for({"accents": legacy_accents}), sid)
+            self.assertEqual(anchors_for(accents), want["anchors"], sid)
 
     def test_repair_is_noop_on_dark_terminals(self) -> None:
         for sid in SCHEME_IDS:

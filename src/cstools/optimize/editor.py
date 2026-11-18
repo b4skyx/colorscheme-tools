@@ -1,4 +1,4 @@
-"""Editor-role optimiser (port of ``legacy/gen_schemes.py`` ``evaluate`` + ``optimise``).
+"""Editor-role optimiser (port of the original prototype's ``evaluate`` + ``optimise``).
 
 The accent roles move in OKLCH so that syntax, diagnostic and git roles stay apart for the vision model
 (CIEDE2000 on simulated colours), with capped rewards, a contrast floor against the background, and a

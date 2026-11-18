@@ -40,8 +40,8 @@ colorscheme-tools/
 │   ├── optimize/
 │   │   ├── recipe.py         Recipe dataclass ← recipe.toml (tomllib)
 │   │   ├── search.py         generic seeded hill-climb over OKLCH points
-│   │   ├── editor.py         editor-role optimiser (port of legacy/gen_schemes.py)
-│   │   ├── terminal.py       ANSI optimiser (port of legacy/export_schemes.py), variant-aware
+│   │   ├── editor.py         editor-role optimiser (port of the original prototype)
+│   │   ├── terminal.py       ANSI optimiser (port of the original prototype), variant-aware
 │   │   └── build.py          recipe → Scheme (palette naming + dedup + roles + terminal)
 │   ├── highlights/
 │   │   ├── groups.py         ONE role-based highlight template (Vim/Neovim groups, treesitter, LSP,
@@ -52,9 +52,9 @@ colorscheme-tools/
 │   │   ├── __init__.py       auto-discovers every target module (pkgutil); REGISTRY
 │   │   └── <name>.py         one module per output format (see "Targets")
 │   ├── project.py            theme-repo config (colorschemes.toml) + build orchestration
-│   └── gallery/              HTML gallery renderer (port of legacy/gallery.html + build_gallery.py)
-├── tests/                    unittest (python -m unittest discover -s tests); golden checks
-└── legacy/                   original prototype scripts, reference only, never imported
+│   └── gallery/              HTML gallery renderer (port of the original prototype gallery)
+└── tests/                    unittest (python -m unittest discover -s tests); golden checks,
+                              fixtures/parity/ frozen prototype reference outputs
 ```
 
 ## Design rules
@@ -129,8 +129,8 @@ A colour value is one of:
   `{"raise": [c, dL]}` (lighten on dark variants, darken on light) · `{"chroma": [c, C]}` (set OKLCH chroma).
 
 Resolution order for a bare name: palette → scheme `derived` → `defaults.py`. Cycles raise `SchemeError`.
-Results are hex strings rounded exactly like `legacy/cvd.py` (`lin2hex`), so migrated schemes reproduce
-the legacy output byte-for-byte.
+Results are hex strings rounded exactly like the original prototype, so migrated schemes reproduce the
+schema v1 reference output byte-for-byte.
 
 ### Canonical role names
 - `syntax`: `variable`, `comment`, `keyword`, `function`, `string`, `type`, `constant`, `number`, `boolean`,
@@ -141,7 +141,7 @@ the legacy output byte-for-byte.
 - `git`: `add`, `change`, `delete`
 - `ui`: `bg`, `bg_alt`, `fg`, `fg_dim`, `comment`
 
-### Default derived colours (`scheme/defaults.py`; legacy formulas from `gen_schemes.groups_for`)
+### Default derived colours (`scheme/defaults.py`; formulas of the schema v1 reference output)
 `bg_cursorline = raise(bg, .035)` · `bg_visual = mix(raise(bg, .10), syntax.type, .12)` ·
 `line_nr = mix(comment, bg, .35)` · `nontext = mix(comment, bg, .4)` · `border = raise(bg_alt, .08)` ·
 `bg_search = mix(bg, diagnostic.warning, .35)` · `diff_add_bg = mix(bg, git.add, .22)` ·

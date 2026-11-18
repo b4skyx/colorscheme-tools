@@ -8,7 +8,7 @@ from ..groups import _treesitter
 
 
 def groups(scheme: Scheme) -> dict[str, S]:
-    """Built-in additions, kept separate so the legacy core remains byte-identical."""
+    """Built-in additions, kept separate so the schema v1 core groups remain byte-identical."""
     r = scheme.resolve
     out = {
         "FloatTitle": S(r("syntax.function"), r("ui.bg_alt"), bold=True),

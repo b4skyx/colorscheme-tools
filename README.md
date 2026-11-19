@@ -32,6 +32,7 @@ PYTHONPATH=src python3 -m cstools --help
 
 ## Targets
 alacritty · kitty · wezterm · ghostty · rio · tmux · fish · starship · fzf · bat · delta · lazygit · eza · yazi ·
+pi ·
 vim · neovim (Lua runtime with `setup()` options) · lualine
 
 Each target is one module in `src/cstools/targets/`, found automatically. Adding a format means adding a file

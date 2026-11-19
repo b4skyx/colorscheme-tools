@@ -168,5 +168,67 @@ class FzfTargetTest(unittest.TestCase):
                 self.assertEqual(proc.returncode, 0, proc.stderr)
 
 
+import json
+
+
+class PiTargetTest(unittest.TestCase):
+    PI_COLOR_KEYS = (
+        "accent", "border", "borderAccent", "borderMuted", "success", "error", "warning", "muted", "dim", "text",
+        "thinkingText", "selectedBg", "searchMatchBg", "searchMatchText", "scrollbarTrack", "scrollbarThumb",
+        "userMessageBg", "userMessageText", "customMessageBg", "customMessageText", "customMessageLabel",
+        "toolPendingBg", "toolSuccessBg", "toolErrorBg", "toolTitle", "toolOutput",
+        "mdHeading", "mdLink", "mdLinkUrl", "mdCode", "mdCodeBlock", "mdCodeBlockBorder", "mdQuote",
+        "mdQuoteBorder", "mdHr", "mdListBullet", "toolDiffAdded", "toolDiffRemoved", "toolDiffContext",
+        "syntaxComment", "syntaxKeyword", "syntaxFunction", "syntaxVariable", "syntaxString", "syntaxNumber",
+        "syntaxType", "syntaxOperator", "syntaxPunctuation",
+        "thinkingOff", "thinkingMinimal", "thinkingLow", "thinkingMedium", "thinkingHigh", "thinkingXhigh",
+        "thinkingMax", "bashMode",
+    )
+
+    def render_theme(self, sid: str) -> tuple[str, dict]:
+        scheme = migrated(sid)
+        files = REGISTRY["pi"].render(scheme, CTX)
+        name = scheme.id if "/" in scheme.name else scheme.name
+        path = f"{sid}/pi/{name}.json"
+        self.assertIn(path, files)
+        return path, json.loads(files[path])
+
+    def test_theme_structure_and_required_colors(self) -> None:
+        for sid in SCHEME_IDS:
+            with self.subTest(sid):
+                scheme = migrated(sid)
+                path, theme = self.render_theme(sid)
+                self.assertEqual(set(theme), {"$schema", "name", "appearance", "vars", "colors", "export"})
+                self.assertEqual(theme["name"], scheme.name)
+                self.assertEqual(theme["appearance"], "light" if scheme.is_light else "dark")
+                self.assertEqual(set(theme["colors"]), set(self.PI_COLOR_KEYS))
+                self.assertTrue(all(v.startswith("#") and len(v) == 7 for v in theme["colors"].values()))
+                self.assertTrue(all(v.startswith("#") and len(v) == 7 for v in theme["vars"].values()))
+                # role propagation: repainting a palette colour changes the theme
+                role = scheme.roles["syntax"]["function"]["fg"]
+                before = theme["colors"]["accent"]
+                scheme.palette[role] = "#123456"
+                scheme.palette["fg"] = "#654321"
+                files = REGISTRY["pi"].render(scheme, CTX)
+                name = scheme.id if "/" in scheme.name else scheme.name
+                theme2 = json.loads(files[f"{sid}/pi/{name}.json"])
+                self.assertNotEqual(theme2["colors"]["accent"], before)
+
+    def test_theme_diff_and_thinking_mapping(self) -> None:
+        for sid in SCHEME_IDS:
+            with self.subTest(sid):
+                scheme = migrated(sid)
+                theme = self.render_theme(sid)[1]
+                colors = theme["colors"]
+                self.assertEqual(colors["toolDiffAdded"], scheme.resolve("git.add"))
+                self.assertEqual(colors["toolDiffRemoved"], scheme.resolve("git.delete"))
+                self.assertEqual(colors["syntaxString"], scheme.resolve("syntax.string"))
+                # thinking borders follow the documented gradient order, ending in warning
+                self.assertEqual(colors["thinkingOff"], scheme.resolve("ui.comment"))
+                self.assertEqual(colors["thinkingXhigh"], scheme.resolve("diagnostic.error"))
+                self.assertEqual(colors["thinkingMax"], scheme.resolve("diagnostic.warning"))
+                self.assertEqual(theme["export"]["pageBg"], scheme.resolve("ui.bg"))
+
+
 if __name__ == "__main__":
     unittest.main()
